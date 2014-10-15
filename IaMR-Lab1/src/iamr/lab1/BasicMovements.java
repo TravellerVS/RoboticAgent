@@ -12,17 +12,17 @@ import ciberIF.ciberIF;
  */
 public class BasicMovements {
     
-    public static double SLOW_SPEED = 0.03;
+    public static double SLOW_SPEED = 0.04;
     public static double FAST_SPEED = 0.13;
-    public static double NORMAL_SPEED = 0.05;
+    public static double NORMAL_SPEED = 0.065;
     
     public static double LIGHT_TURN = 0.2;
     public static double MEDIUM_TURN = 0.6;
     public static double HARD_TURN = 0.9;
     
-    public static double LIGHT_TURN_RADIUS = 10;
-    public static double MEDIUM_TURN_RADIUS = 4;
-    public static double HARD_TURN_RADIUS = 1;
+    public static double LIGHT_TURN_RADIUS = 10.0;
+    public static double MEDIUM_TURN_RADIUS = 4.0;
+    public static double HARD_TURN_RADIUS = 1.5;
     
     public static boolean RIGHT = true;
     public static boolean LEFT = false;

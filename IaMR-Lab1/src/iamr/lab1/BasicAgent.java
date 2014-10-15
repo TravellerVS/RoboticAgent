@@ -93,6 +93,8 @@ public class BasicAgent extends Agent implements Observer{
     private void SetUpBehaviors() {        
         behaviorList = new PrioritizedBehaviorList();
         int i = 100;
+        
+        behaviorList.AddBehavior(new BasicBehaviorGetAwayFromColision(movements, sensors) , i--);
         behaviorList.AddBehavior(new BasicBehaviorAvoidColision(movements, sensors) , i--);
         behaviorList.AddBehavior(new BasicBehaviorFinish(movements, sensors) , i--);
         behaviorList.AddBehavior(new BasicBehaviorGoToBeacon(movements, sensors) , i--);
