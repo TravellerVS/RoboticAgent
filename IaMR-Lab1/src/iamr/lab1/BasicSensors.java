@@ -15,11 +15,14 @@ import java.util.*;
 public class BasicSensors implements Subject {
     private ciberIF cif;
     
-    public static double DISTANCE_ALMOST_COLIDED = -6.0;
-    public static double DISTANCE_VERY_CLOSE = -3.95;
+    public static double DISTANCE_ALMOST_COLIDED = -4.5;
+    public static double DISTANCE_VERY_CLOSE = -4.0;
+    public static double DISTANCE_IDEAL = -3.9;
     public static double DISTANCE_CLOSE = -3.0;
     public static double DISTANCE_NEAR = -2.8;
+    public static double DISTANCE_MEDIUM = -1.5;
     public static double DISTANCE_FAR = -1.0;
+    public static double DISTANCE_VISIBLE = 0.0;
     
     private double irSensor0, irSensor1, irSensor2, compas;
     public double GetIRSensor0(){return -irSensor0;}
@@ -86,6 +89,8 @@ public class BasicSensors implements Subject {
                 compas = cif.GetCompassSensor();
         if(cif.IsGroundReady())
                 ground = cif.GetGroundSensor();
+        if(cif.IsBumperReady())
+                collision = cif.GetBumperSensor();
         if(cif.IsBeaconReady(beaconToFollow))
         {
             beacon = cif.GetBeaconSensor(beaconToFollow);
@@ -107,11 +112,17 @@ public class BasicSensors implements Subject {
             }
         }
         
+        //SetAproxBeaconLocation(0.0,0.0,0.0,-45.0, 5.0, 0.0, 0.0, -90.0);
+        
         if(aproxBeaconAngleDifference != 0.0)
         {
-            aproxBeaconDir = NormalizeAngle( compas - GetAngleBetweenPoints(x, y, aproxBeaconX, aproxBeaconY));
+            aproxBeaconDir = NormalizeAngle( GetAngleBetweenPoints(x, y, aproxBeaconX, aproxBeaconY)-compas);
+            //aproxBeaconDir = NormalizeAngle( 0.0 - GetAngleBetweenPoints(0.0, 0.0, aproxBeaconX, aproxBeaconY));
             HelperFunctions.print_to_output("Measures: AproxBeaconDir=" +aproxBeaconDir + "aproxBeaconX=" +aproxBeaconX + "aproxBeaconY=" +aproxBeaconY + "\n");
         }
+        
+        HelperFunctions.print_to_output("------------point1 set-------------------------\n");
+        //HelperFunctions.print_to_output("------------distance = " + DistanceBetweenPoints(x1,y1,x, y) + "--- angle:"+GetAngleBetweenPoints(0.0, 0.0, aproxBeaconX, aproxBeaconY)+"\n");
         
         x = cif.GetX();
         y = cif.GetY();
@@ -119,7 +130,7 @@ public class BasicSensors implements Subject {
         
 //        HelperFunctions.print_to_output("Measures: ir0=" + irSensor0 + " ir1=" + irSensor1 + " ir2=" + irSensor2 + "\n");
 //        HelperFunctions.print_to_output("Measures: compas=" + compas + " ground=" + ground + " isBeaconVisible=" + isBeaconVisible() + " GetBeaconDir=" + GetBeaconDir() + " beaconToFollow=" + beaconToFollow +"\n");
-        HelperFunctions.print_to_output("Measures: x=" + x + " y=" + y + " dir=" + dir);
+        //HelperFunctions.print_to_output("Measures: x=" + x + " y=" + y + " dir=" + dir);
         
         
         if(cif.GetTime() % 2 == 0) {
@@ -178,14 +189,14 @@ public class BasicSensors implements Subject {
     }
     
     private double GetAngleBetweenPoints(double x1, double y1, double x2, double y2) { 
-        return Math.toDegrees(Math.asin((y2-y1)/(x2-x1)));
+        return Math.toDegrees(Math.atan2((y2-y1),(x2-x1)));
     }
     
     private double NormalizeAngle(double angle) {
         if(angle > 180.00){
             return (-360.0 + angle);
         }else if(angle < -180.00){
-            return (3600.0 + angle);
+            return (360.0 + angle);
         }else{
             return angle;
         }

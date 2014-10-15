@@ -10,8 +10,7 @@ package iamr.lab1;
  */
 public class BasicBehaviorFinish extends BasicBehavior{
 
-    BasicBehaviorFinish(BasicMovements movements, BasicSensors sensors)
-    {
+    BasicBehaviorFinish(BasicMovements movements, BasicSensors sensors){
         super(movements, sensors);
     }
 
