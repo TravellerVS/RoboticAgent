@@ -12,8 +12,7 @@ public class BasicBehaviorWander extends BasicBehavior {
     
     protected boolean defaultDirection;
     
-    BasicBehaviorWander(BasicMovements movements, BasicSensors sensors)
-    {
+    BasicBehaviorWander(BasicMovements movements, BasicSensors sensors){
         super(movements, sensors); 
         defaultDirection = (HelperFunctions.randBool()) ? BasicMovements.RIGHT : BasicMovements.LEFT ;
     }

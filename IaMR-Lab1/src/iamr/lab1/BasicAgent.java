@@ -94,11 +94,11 @@ public class BasicAgent extends Agent implements Observer{
         behaviorList = new PrioritizedBehaviorList();
         int i = 100;
         
-        behaviorList.AddBehavior(new BasicBehaviorGetAwayFromColision(movements, sensors) , i--);
+        //behaviorList.AddBehavior(new BasicBehaviorGetAwayFromColision(movements, sensors) , i--);
         behaviorList.AddBehavior(new BasicBehaviorAvoidColision(movements, sensors) , i--);
         behaviorList.AddBehavior(new BasicBehaviorFinish(movements, sensors) , i--);
         behaviorList.AddBehavior(new BasicBehaviorGoToBeacon(movements, sensors) , i--);
-        behaviorList.AddBehavior(new BasicBehaviorGoToAproxBeaconLocation(movements, sensors) , i--);
+        //behaviorList.AddBehavior(new BasicBehaviorGoToAproxBeaconLocation(movements, sensors) , i--);
         behaviorList.AddBehavior(new BasicBehaviorFollowWall(movements, sensors) , i--);        
         behaviorList.AddBehavior(new BasicBehaviorWander(movements, sensors) , i--);
     }
