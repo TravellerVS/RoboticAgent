@@ -15,8 +15,10 @@ import java.util.*;
 public class BasicSensors implements Subject {
     private ciberIF cif;
     
-    public static double DISTANCE_VERY_CLOSE = -4.0;
-    public static double DISTANCE_NEAR = -2.5;
+    public static double DISTANCE_ALMOST_COLIDED = -6.0;
+    public static double DISTANCE_VERY_CLOSE = -3.95;
+    public static double DISTANCE_CLOSE = -3.0;
+    public static double DISTANCE_NEAR = -2.8;
     public static double DISTANCE_FAR = -1.0;
     
     private double irSensor0, irSensor1, irSensor2, compas;
