@@ -1,0 +1,61 @@
+@startuml
+abstract class iamr.lab1.Agent
+abstract class iamr.lab1.BasicBehavior
+annotation java.lang.Override
+class ciberIF.ciberIF
+class iamr.lab1.AgentFactory
+class iamr.lab1.BasicAgent
+class iamr.lab1.BasicBehaviorAvoidColision
+class iamr.lab1.BasicBehaviorFinish
+class iamr.lab1.BasicBehaviorFollowWall
+class iamr.lab1.BasicBehaviorGoToAproxBeaconLocation
+class iamr.lab1.BasicBehaviorGoToBeacon
+class iamr.lab1.BasicBehaviorWander
+class iamr.lab1.BasicIF
+class iamr.lab1.BasicMovements
+class iamr.lab1.BasicSensors
+class iamr.lab1.HelperFunctions
+class iamr.lab1.IaMRLab1
+class iamr.lab1.PrioritizedBehavior
+class iamr.lab1.PrioritizedBehaviorList
+class iamr.lab1.jClient
+class java.util.ArrayList
+class java.util.Collections
+class java.util.Comparator
+class java.util.List
+class java.util.Random
+class java.util.Vector
+class java.util.logging.Level
+class java.util.logging.Logger
+interface iamr.lab1.Observer
+interface iamr.lab1.Subject
+iamr.lab1.BasicAgent --|> iamr.lab1.Agent
+iamr.lab1.BasicAgent ..> java.lang.Override
+iamr.lab1.BasicAgent --|> iamr.lab1.Observer
+iamr.lab1.BasicBehaviorAvoidColision --|> iamr.lab1.BasicBehavior
+iamr.lab1.BasicBehaviorAvoidColision ..> java.lang.Override
+iamr.lab1.BasicBehaviorFinish --|> iamr.lab1.BasicBehavior
+iamr.lab1.BasicBehaviorFinish ..> java.lang.Override
+iamr.lab1.BasicBehaviorFollowWall --|> iamr.lab1.BasicBehavior
+iamr.lab1.BasicBehaviorFollowWall ..> java.lang.Override
+iamr.lab1.BasicBehaviorGoToAproxBeaconLocation --|> iamr.lab1.BasicBehavior
+iamr.lab1.BasicBehaviorGoToAproxBeaconLocation ..> java.lang.Override
+iamr.lab1.BasicBehaviorGoToBeacon --|> iamr.lab1.BasicBehavior
+iamr.lab1.BasicBehaviorGoToBeacon ..> java.lang.Override
+iamr.lab1.BasicBehaviorWander --|> iamr.lab1.BasicBehavior
+iamr.lab1.BasicBehaviorWander ..> java.lang.Override
+iamr.lab1.BasicIF ..> ciberIF.ciberIF
+iamr.lab1.BasicMovements ..> ciberIF.ciberIF
+iamr.lab1.BasicSensors ..> java.lang.Override
+iamr.lab1.BasicSensors --|> iamr.lab1.Subject
+iamr.lab1.HelperFunctions ..> java.util.Random
+iamr.lab1.IaMRLab1 ..> java.util.Vector
+iamr.lab1.IaMRLab1 ..> java.util.logging.Level
+iamr.lab1.IaMRLab1 ..> java.util.logging.Logger
+iamr.lab1.PrioritizedBehaviorList ..> java.lang.Override
+iamr.lab1.PrioritizedBehaviorList ..> java.util.ArrayList
+iamr.lab1.PrioritizedBehaviorList ..> java.util.Collections
+iamr.lab1.PrioritizedBehaviorList ..> java.util.Comparator
+iamr.lab1.PrioritizedBehaviorList ..> java.util.List
+iamr.lab1.jClient ..> java.util.Vector
+@enduml

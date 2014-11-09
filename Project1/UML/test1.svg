@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="191pt" style="width:259px;height:191px;background:#000000;" version="1.1" viewBox="0 0 259 191" width="259pt">
+    <defs/>
+    <g>
+        <text fill="#33FF02" font-family="SansSerif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="140" x="0" y="14">Dot Executable: null</text>
+        <text fill="#33FF02" font-family="SansSerif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="258" x="0" y="31.6094">Cannot find Graphviz. You should try</text>
+        <text fill="#33FF02" font-family="SansSerif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="0" x="4" y="49.2188"/>
+        <text fill="#33FF02" font-family="SansSerif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="71" x="0" y="66.8281">@startuml</text>
+        <text fill="#33FF02" font-family="SansSerif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="50" x="0" y="84.4375">testdot</text>
+        <text fill="#33FF02" font-family="SansSerif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="66" x="0" y="102.0469">@enduml</text>
+        <text fill="#33FF02" font-family="SansSerif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="0" x="4" y="119.6563"/>
+        <text fill="#33FF02" font-family="SansSerif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="15" x="4" y="137.2656">or</text>
+        <text fill="#33FF02" font-family="SansSerif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="0" x="4" y="154.875"/>
+        <text fill="#33FF02" font-family="SansSerif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="201" x="0" y="172.4844">java -jar plantuml.jar -testdot</text>
+        <text fill="#33FF02" font-family="SansSerif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="0" x="4" y="190.0938"/>
+    </g>
+</svg>
