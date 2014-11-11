@@ -4,8 +4,8 @@
 typedef struct
 {
 	bool isVisible;
-	int relative_direction;
-	int apsolute_direction;
+	double relative_direction;
+	double apsolute_direction;
 } BeaconSensor;
 
 typedef struct
@@ -14,6 +14,14 @@ typedef struct
 	double y;
 	double t;
 } PositionSensor;
+
+typedef struct
+{
+	double x;
+	double y;
+	double t;
+	double relative_direction;
+} StartingPosition;
 
 typedef struct
 {
@@ -27,7 +35,7 @@ typedef struct
 	ObstacleSensor obstacleSensor; ///< analog sensors structure
 	BeaconSensor beaconSensor;
 	PositionSensor positionSensor;
-	PositionSensor startingPosition;
+	StartingPosition startingPosition;
 	int groundSensor;
 	bool atBeaconArea;	
 	int batteryVoltage;

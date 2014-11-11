@@ -1,3 +1,4 @@
+#include <math.h>
 #include "sensors.h"
 #include "config_constants.h"
 
@@ -22,21 +23,22 @@ void refresh_sensorReadings(){
 	sensor_sensorReadings.obstacleSensor.left = analogSensors.obstSensLeft;
 	sensor_sensorReadings.obstacleSensor.right = analogSensors.obstSensRight;
 	sensor_sensorReadings.batteryVoltage = analogSensors.batteryVoltage;
-	
 	readGroundSensor();	// Read ground sensor
 	getRobotPos(&sensor_sensorReadings.positionSensor.x, &sensor_sensorReadings.positionSensor.y, &sensor_sensorReadings.positionSensor.t);  //Read position
-	
 	readBeaconSensor();
 	
 	calculate_extra_values();
-	/*
+	
 	printf("x=%5.3f, y=%5.3f, t=%5.3f", sensor_sensorReadings.positionSensor.x, sensor_sensorReadings.positionSensor.y, sensor_sensorReadings.positionSensor.t);
-	printf("\n");	
+	printf("\n");
+	
+	 
 	printf("Obst_left=%03d, Obst_front=%03d, Obst_right=%03d, Bat_voltage=%03d, Ground_sens=%d, Beacon_visible=%d, Ground_sensors=", sensor_sensorReadings.obstacleSensor.left,
 					sensor_sensorReadings.obstacleSensor.front, sensor_sensorReadings.obstacleSensor.right, sensor_sensorReadings.batteryVoltage, sensor_sensorReadings.groundSensor,
 					sensor_sensorReadings.beaconSensor.isVisible);
 	printInt(sensor_sensorReadings.groundSensor, 2 | 5 << 16);	// System call
 	printf("\n");	
+	/*
 	printf("Beacon_visible=%d, Beacon_direction=%03d", sensor_sensorReadings.beaconSensor.isVisible, sensor_sensorReadings.beaconSensor.direction);
 	printf("\n");
 	*/
@@ -92,6 +94,10 @@ void calculate_extra_values(){
 		sensor_sensorReadings.startingPosition.t =  sensor_sensorReadings.positionSensor.t;
 	}
 	sensor_sensorReadings.beaconSensor.apsolute_direction = (sensor_sensorReadings.beaconSensor.relative_direction + sensor_sensorReadings.positionSensor.t);
+	
+	double dx = (sensor_sensorReadings.startingPosition.x - sensor_sensorReadings.positionSensor.x);
+	double dy = (sensor_sensorReadings.startingPosition.y - sensor_sensorReadings.positionSensor.y);
+	sensor_sensorReadings.startingPosition.relative_direction = atan(dy/dx);	
 }
 
 SensorReadings get_sensorReadings(){
