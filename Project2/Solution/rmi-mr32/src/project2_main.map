@@ -2,6 +2,8 @@ Archive member included because of file (symbol)
 
 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
                               project2_main.o (xprintf)
+/opt/pic32mx/lib/libm.a(arc32.o)
+                              project2_main.o (atan)
 /opt/pic32mx/lib/libm.a(cos32.o)
                               project2_main.o (cos)
 /opt/pic32mx/lib/libm.a(sin32.o)
@@ -11,9 +13,11 @@ Archive member included because of file (symbol)
 /opt/pic32mx/lib/libm.a(sincos32.o)
                               /opt/pic32mx/lib/libm.a(cos32.o) (sincon)
 /opt/pic32mx/lib/libm.a(func32.o)
-                              /opt/pic32mx/lib/libm.a(cos32.o) (sigmax)
+                              /opt/pic32mx/lib/libm.a(arc32.o) (sigmax)
 /opt/pic32mx/lib/libm.a(dp32.o)
                               project2_main.o (__subdf3)
+/opt/pic32mx/lib/libm.a(sqrt32.o)
+                              /opt/pic32mx/lib/libm.a(arc32.o) (exsqrt)
 /opt/pic32mx/lib/libc.a(exit.o)
                               project2_main.o (exit)
 /opt/pic32mx/lib/libc.a(stdclean.o)
@@ -54,15 +58,15 @@ _atexitptr          0x4               /opt/pic32mx/lib/libc.a(stdclean.o)
 errno               0x4               /opt/pic32mx/lib/libc.a(errno.o)
 tick80ms            0x4               project2_main.o
 sensor_sensorReadings
-                    0x58              project2_main.o
+                    0x70              project2_main.o
 _sibuf              0x20              /opt/pic32mx/lib/libc.a(_iob.o)
 tick20ms            0x4               project2_main.o
 behavior_sensorReadings
-                    0x58              project2_main.o
+                    0x70              project2_main.o
 temp1               0x4               project2_main.o
 _outdone            0x1               /opt/pic32mx/lib/libc.a(_iob.o)
-beh_fol_wall        0x18              project2_main.o
-behavior_struct     0x28              project2_main.o
+beh_fol_wall        0x28              project2_main.o
+behavior_struct     0x48              project2_main.o
 beh_av_col          0x8               project2_main.o
 tick40ms            0x4               project2_main.o
 tick160ms           0x4               project2_main.o
@@ -76,11 +80,11 @@ Microchip PIC32 Memory-Usage Report
 kseg0 Program-Memory Usage
 section                    address  length [bytes]      (dec)  Description
 -------                 ----------  -------------------------  -----------
-.text                   0x9d001400         0x504c       20556  Application's executable code 
-.rodata                 0x9d006450          0x244         580  Read-only constant data 
-.data                   0x9d006694          0x140         320  Data-initialization template 
-.sdata                  0x9d0067d4           0x1c          28  Small data-initialization template 
-      Total kseg0_program_mem used  :      0x53ec       21484  4.1% of 0x7ec00
+.text                   0x9d001400         0x60f4       24820  Application's executable code 
+.rodata                 0x9d0074f8          0x324         804  Read-only constant data 
+.data                   0x9d00781c          0x2e8         744  Data-initialization template 
+.sdata                  0x9d007b04           0x1c          28  Small data-initialization template 
+      Total kseg0_program_mem used  :      0x671c       26396  5.1% of 0x7ec00
 
 kseg0 Boot-Memory Usage
 section                    address  length [bytes]      (dec)  Description
@@ -102,21 +106,21 @@ section                    address  length [bytes]      (dec)  Description
 -------                 ----------  -------------------------  -----------
          Total kseg1_boot_mem used  :           0           0  <1% of 0x490
         --------------------------------------------------------------------------
-         Total Program Memory used  :      0x56c8       22216  4.2% of 0x80480
+         Total Program Memory used  :      0x69f8       27128  5.2% of 0x80480
         --------------------------------------------------------------------------
 
 
 kseg1 Data-Memory Usage
 section                    address  length [bytes]      (dec)  Description
 -------                 ----------  -------------------------  -----------
-.data                   0xa0000000          0x140         320  Initialized data 
-.sdata                  0xa0000140           0x1c          28  Small initialized data 
-.sbss                   0xa0000160           0xe0         224  Small uninitialized data 
-.bss                    0xa0000240          0x260         608  Uninitialized data 
-.stack                  0xa00004a0         0x2000        8192  Minimum space reserved for stack 
-         Total kseg1_data_mem used  :      0x249c        9372  7.2% of 0x20000
+.data                   0xa0000000          0x2e8         744  Initialized data 
+.sdata                  0xa00002e8           0x1c          28  Small initialized data 
+.sbss                   0xa0000308           0xe0         224  Small uninitialized data 
+.bss                    0xa00003e8          0x2c0         704  Uninitialized data 
+.stack                  0xa00006a8         0x2000        8192  Minimum space reserved for stack 
+         Total kseg1_data_mem used  :      0x26a4        9892  7.5% of 0x20000
         --------------------------------------------------------------------------
-            Total Data Memory used  :      0x249c        9372  7.2% of 0x20000
+            Total Data Memory used  :      0x26a4        9892  7.5% of 0x20000
         --------------------------------------------------------------------------
 
 Memory Configuration
@@ -452,210 +456,232 @@ LOAD /opt/pic32mx/lib/startup.o
  *(.vector_63)
                 0x0000000000000001                ASSERT (((_vector_spacing == 0x0) || (SIZEOF (.vector_63) <= (_vector_spacing << 0x5))), function at exception vector 63 too large)
 
-.text           0x000000009d001400     0x504c
+.text           0x000000009d001400     0x60f4
                 0x000000009d001400                _text_begin = .
  *(.text .stub .text.* .gnu.linkonce.t.*)
- .text          0x000000009d001400     0x22a0 project2_main.o
+ .text          0x000000009d001400     0x2a08 project2_main.o
+                0x000000009d002774                get_priority_from_id
+                0x000000009d002838                reset_follow_wall
                 0x000000009d001e38                normalizeAngle
-                0x000000009d002c98                follow_beacon
-                0x000000009d003000                execute_behavior
-                0x000000009d00275c                test_follow_wall
-                0x000000009d0032f8                calculate_extra_values
+                0x000000009d002f04                follow_beacon
+                0x000000009d00327c                execute_behavior
+                0x000000009d002710                test_follow_wall
+                0x000000009d00386c                calculate_extra_values
                 0x000000009d001d94                pid
-                0x000000009d0027ac                reset_default_priority_list
+                0x000000009d0029a8                reset_default_priority_list
+                0x000000009d00285c                signal_long_LED
                 0x000000009d002464                isr_enc_left
-                0x000000009d003438                get_sensorReadings
-                0x000000009d00313c                sensors_finish
+                0x000000009d002920                reset_stop_at_beacon
+                0x000000009d002948                reset_follow_starting_point
+                0x000000009d002938                test_stop_at_starting_point
+                0x000000009d003bd0                get_sensorReadings
+                0x000000009d0036b8                sensors_finish
                 0x000000009d0025fc                configBTUart
                 0x000000009d001400                setServoPos
-                0x000000009d002734                test_stop_at_beacon
+                0x000000009d0026e8                test_stop_at_beacon
                 0x000000009d00251c                isr_enc_right
-                0x000000009d0027d4                behaviors_init
+                0x000000009d0029d0                behaviors_init
+                0x000000009d002928                reset_wounder
                 0x000000009d001548                readAnalogSensors
                 0x000000009d001a88                getRobotPos
                 0x000000009d0014a4                updateBatteryVoltage
-                0x000000009d00316c                readGroundSensor
+                0x000000009d0036e8                readGroundSensor
+                0x000000009d002930                reset_stop_at_starting_point
                 0x000000009d0025ec                __gxx_personality_v0
                 0x000000009d002260                isr_t2
                 0x000000009d001abc                led
+                0x000000009d002998                test_follow_starting_point
                 0x000000009d001b68                setSP2
                 0x000000009d001b18                leds
-                0x000000009d003114                sensors_init
+                0x000000009d002950                set_return_priority_list
+                0x000000009d003690                sensors_init
                 0x000000009d002694                sendChar
-                0x000000009d002850                avoid_colision
-                0x000000009d0033c4                refresh_sensorReadings
+                0x000000009d002a3c                avoid_colision
+                0x000000009d003990                refresh_sensorReadings
                 0x000000009d002220                wait
-                0x000000009d0028f4                rotateRel_naive
-                0x000000009d0031a4                readBeaconSensor
-                0x000000009d0028ec                wounder
+                0x000000009d002b60                rotateRel_naive
+                0x000000009d0027ac                change_behavior_priority
+                0x000000009d003720                readBeaconSensor
+                0x000000009d002b1c                wounder
                 0x000000009d00164c                initPIC32
-                0x000000009d00289c                behaviors_finish
-                0x000000009d00279c                check_behaviors
-                0x000000009d003504                main
-                0x000000009d002838                movement_rotate
+                0x000000009d002acc                behaviors_finish
+                0x000000009d003c7c                main
+                0x000000009d002a24                movement_rotate
                 0x000000009d001bf0                readEncoders
                 0x000000009d0026dc                txc_bt
-                0x000000009d002a8c                movement_travel_in_curve_radius
+                0x000000009d002940                stop_at_starting_point
+                0x000000009d002cf8                movement_travel_in_curve_radius
                 0x000000009d00210c                delay
                 0x000000009d001bb8                setVel2
-                0x000000009d0028e4                movement_go_forward
-                0x000000009d002890                movement_stop
+                0x000000009d002b14                movement_go_forward
+                0x000000009d002ac0                movement_stop
                 0x000000009d001b5c                batteryVoltage
-                0x000000009d0028a4                stop_at_beacon
-                0x000000009d0026e8                test_avoid_colision
+                0x000000009d002ad4                stop_at_beacon
+                0x000000009d0028ac                test_avoid_colision
                 0x000000009d001ba4                setPWM2
-                0x000000009d002748                test_follow_beacon
-                0x000000009d002c78                movement_travel_in_curve_radius_direction
+                0x000000009d0028a4                reset_avoid_colision
+                0x000000009d0026fc                test_follow_beacon
+                0x000000009d0029a0                follow_starting_point
+                0x000000009d002ee4                movement_travel_in_curve_radius_direction
+                0x000000009d002918                reset_follow_beacon
                 0x000000009d001f20                updateLocalization
                 0x000000009d001c1c                actuateMotors
-                0x000000009d0027a4                test_wounder
-                0x000000009d002d1c                follow_wall
+                0x000000009d00276c                test_wounder
+                0x000000009d002fc8                follow_wall
                 0x000000009d002158                readLineSensors
-                0x000000009d002830                driveMotors
+                0x000000009d002a1c                driveMotors
                 0x000000009d001be8                closedLoopControl
-                0x000000009d003490                get_new_sensorReadings
+                0x000000009d003c18                get_new_sensorReadings
                 0x000000009d001b38                obstacleSensor
- .text          0x000000009d0036a0      0x990 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
-                0x000000009d0036a8                xprintf
- .text          0x000000009d004030      0x1a0 /opt/pic32mx/lib/libm.a(cos32.o)
-                0x000000009d004030                cos
-                0x000000009d004030                dpcos
- .text          0x000000009d0041d0      0x198 /opt/pic32mx/lib/libm.a(sin32.o)
-                0x000000009d0041d0                dpsin
-                0x000000009d0041d0                sin
- .text          0x000000009d004368      0x1b4 /opt/pic32mx/lib/libm.a(reduct32.o)
-                0x000000009d004368                reduct
- .text          0x000000009d00451c      0x5d4 /opt/pic32mx/lib/libm.a(func32.o)
-                0x000000009d0046f0                exadd
-                0x000000009d004624                exmul
-                0x000000009d00451c                sigmax
-                0x000000009d00488c                exdiv
-                0x000000009d0047dc                exsub
- .text          0x000000009d004af0     0x1128 /opt/pic32mx/lib/libm.a(dp32.o)
-                0x000000009d005ba0                fabs
-                0x000000009d005a64                __eqdf2
-                0x000000009d005a64                __gtdf2
-                0x000000009d004af0                dpsub
-                0x000000009d0056f8                __floatsidf
-                0x000000009d005a64                __ltdf2
-                0x000000009d00576c                ultodp
-                0x000000009d004f1c                dpmul
-                0x000000009d005860                dptofp
-                0x000000009d0059e0                __fixunsdfsi
-                0x000000009d005a64                dpcmp
-                0x000000009d0057bc                __extendsfdf2
-                0x000000009d004af8                __adddf3
-                0x000000009d0059e0                dptoul
-                0x000000009d005244                dpdiv
-                0x000000009d0056f8                litodp
-                0x000000009d005958                __fixdfsi
-                0x000000009d005a64                __ledf2
-                0x000000009d0057bc                fptodp
-                0x000000009d005b88                __negdf2
-                0x000000009d004af8                dpadd
-                0x000000009d005244                __divdf3
-                0x000000009d004f1c                __muldf3
-                0x000000009d005860                __truncdfsf2
-                0x000000009d005a64                __nedf2
-                0x000000009d005958                dptoli
-                0x000000009d005bbc                nan
-                0x000000009d005ba0                dpfabs
-                0x000000009d005a64                __gedf2
-                0x000000009d005bbc                dpnan
-                0x000000009d004af0                __subdf3
- .text.exit     0x000000009d005c18       0x1c /opt/pic32mx/lib/libc.a(exit.o)
-                0x000000009d005c18                exit
+ .text          0x000000009d003e08      0x990 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
+                0x000000009d003e10                xprintf
+ .text          0x000000009d004798      0x384 /opt/pic32mx/lib/libm.a(arc32.o)
+                0x000000009d004a58                dpatan
+                0x000000009d004798                exatan
+                0x000000009d004a58                atan
+ .text          0x000000009d004b1c      0x1a0 /opt/pic32mx/lib/libm.a(cos32.o)
+                0x000000009d004b1c                cos
+                0x000000009d004b1c                dpcos
+ .text          0x000000009d004cbc      0x198 /opt/pic32mx/lib/libm.a(sin32.o)
+                0x000000009d004cbc                dpsin
+                0x000000009d004cbc                sin
+ .text          0x000000009d004e54      0x1b4 /opt/pic32mx/lib/libm.a(reduct32.o)
+                0x000000009d004e54                reduct
+ .text          0x000000009d005008      0x5d4 /opt/pic32mx/lib/libm.a(func32.o)
+                0x000000009d0051dc                exadd
+                0x000000009d005110                exmul
+                0x000000009d005008                sigmax
+                0x000000009d005378                exdiv
+                0x000000009d0052c8                exsub
+ .text          0x000000009d0055dc     0x1128 /opt/pic32mx/lib/libm.a(dp32.o)
+                0x000000009d00668c                fabs
+                0x000000009d006550                __eqdf2
+                0x000000009d006550                __gtdf2
+                0x000000009d0055dc                dpsub
+                0x000000009d0061e4                __floatsidf
+                0x000000009d006550                __ltdf2
+                0x000000009d006258                ultodp
+                0x000000009d005a08                dpmul
+                0x000000009d00634c                dptofp
+                0x000000009d0064cc                __fixunsdfsi
+                0x000000009d006550                dpcmp
+                0x000000009d0062a8                __extendsfdf2
+                0x000000009d0055e4                __adddf3
+                0x000000009d0064cc                dptoul
+                0x000000009d005d30                dpdiv
+                0x000000009d0061e4                litodp
+                0x000000009d006444                __fixdfsi
+                0x000000009d006550                __ledf2
+                0x000000009d0062a8                fptodp
+                0x000000009d006674                __negdf2
+                0x000000009d0055e4                dpadd
+                0x000000009d005d30                __divdf3
+                0x000000009d005a08                __muldf3
+                0x000000009d00634c                __truncdfsf2
+                0x000000009d006550                __nedf2
+                0x000000009d006444                dptoli
+                0x000000009d0066a8                nan
+                0x000000009d00668c                dpfabs
+                0x000000009d006550                __gedf2
+                0x000000009d0066a8                dpnan
+                0x000000009d0055dc                __subdf3
+ .text          0x000000009d006704      0x5bc /opt/pic32mx/lib/libm.a(sqrt32.o)
+                0x000000009d00699c                __mchp_sqrt
+                0x000000009d006704                exsqrt
+                0x000000009d00699c                dpsqrt
+ .text.exit     0x000000009d006cc0       0x1c /opt/pic32mx/lib/libc.a(exit.o)
+                0x000000009d006cc0                exit
  .text._cleanup
-                0x000000009d005c34       0x60 /opt/pic32mx/lib/libc.a(stdclean.o)
-                0x000000009d005c34                _cleanup
- .text._exit    0x000000009d005c94        0x8 /opt/pic32mx/lib/libc.a(_exit.o)
-                0x000000009d005c94                _exit
- .text.fclose   0x000000009d005c9c      0x114 /opt/pic32mx/lib/libc.a(fclose.o)
-                0x000000009d005c9c                fclose
- .text.fflush   0x000000009d005db0       0xc4 /opt/pic32mx/lib/libc.a(fflush.o)
-                0x000000009d005db0                fflush
+                0x000000009d006cdc       0x60 /opt/pic32mx/lib/libc.a(stdclean.o)
+                0x000000009d006cdc                _cleanup
+ .text._exit    0x000000009d006d3c        0x8 /opt/pic32mx/lib/libc.a(_exit.o)
+                0x000000009d006d3c                _exit
+ .text.fclose   0x000000009d006d44      0x114 /opt/pic32mx/lib/libc.a(fclose.o)
+                0x000000009d006d44                fclose
+ .text.fflush   0x000000009d006e58       0xc4 /opt/pic32mx/lib/libc.a(fflush.o)
+                0x000000009d006e58                fflush
  .text._bufallo
-                0x000000009d005e74       0x58 /opt/pic32mx/lib/libc.a(buf.o)
-                0x000000009d005e74                _bufallo
+                0x000000009d006f1c       0x58 /opt/pic32mx/lib/libc.a(buf.o)
+                0x000000009d006f1c                _bufallo
  .text._buffree
-                0x000000009d005ecc       0x10 /opt/pic32mx/lib/libc.a(buf.o)
-                0x000000009d005ecc                _buffree
+                0x000000009d006f74       0x10 /opt/pic32mx/lib/libc.a(buf.o)
+                0x000000009d006f74                _buffree
  .text.getpagesize
-                0x000000009d005edc        0x8 /opt/pic32mx/lib/libc.a(sbrk.o)
-                0x000000009d005edc                getpagesize
+                0x000000009d006f84        0x8 /opt/pic32mx/lib/libc.a(sbrk.o)
+                0x000000009d006f84                getpagesize
  .text._stub_sbd_memlayout
-                0x000000009d005ee4       0x2c /opt/pic32mx/lib/libc.a(sbrk.o)
-                0x000000009d005ee4                _stub_sbd_memlayout
-                0x000000009d005ee4                _sbd_memlayout
+                0x000000009d006f8c       0x2c /opt/pic32mx/lib/libc.a(sbrk.o)
+                0x000000009d006f8c                _stub_sbd_memlayout
+                0x000000009d006f8c                _sbd_memlayout
  .text._sbrk_init
-                0x000000009d005f10      0x158 /opt/pic32mx/lib/libc.a(sbrk.o)
-                0x000000009d005f10                _sbrk_init
- .text._sbrk    0x000000009d006068       0xbc /opt/pic32mx/lib/libc.a(sbrk.o)
-                0x000000009d006068                _sbrk
- .text.sbrk     0x000000009d006124       0x74 /opt/pic32mx/lib/libc.a(sbrk.o)
-                0x000000009d006124                sbrk
- .text.write    0x000000009d006198       0xa8 /opt/pic32mx/lib/libc.a(write.o)
-                0x000000009d006198                write
- .text.remove   0x000000009d006240        0x8 /opt/pic32mx/lib/libc.a(remove.o)
-                0x000000009d006240                remove
- .text.close    0x000000009d006248        0x8 /opt/pic32mx/lib/libc.a(close.o)
-                0x000000009d006248                close
- .text          0x000000009d006250       0xa8 /opt/pic32mx/lib/libc.a(memset.o)
-                0x000000009d006250                memset
+                0x000000009d006fb8      0x158 /opt/pic32mx/lib/libc.a(sbrk.o)
+                0x000000009d006fb8                _sbrk_init
+ .text._sbrk    0x000000009d007110       0xbc /opt/pic32mx/lib/libc.a(sbrk.o)
+                0x000000009d007110                _sbrk
+ .text.sbrk     0x000000009d0071cc       0x74 /opt/pic32mx/lib/libc.a(sbrk.o)
+                0x000000009d0071cc                sbrk
+ .text.write    0x000000009d007240       0xa8 /opt/pic32mx/lib/libc.a(write.o)
+                0x000000009d007240                write
+ .text.remove   0x000000009d0072e8        0x8 /opt/pic32mx/lib/libc.a(remove.o)
+                0x000000009d0072e8                remove
+ .text.close    0x000000009d0072f0        0x8 /opt/pic32mx/lib/libc.a(close.o)
+                0x000000009d0072f0                close
+ .text          0x000000009d0072f8       0xa8 /opt/pic32mx/lib/libc.a(memset.o)
+                0x000000009d0072f8                memset
  .text._mon_putc
-                0x000000009d0062f8       0xa4 /opt/pic32mx/lib/libc.a(_mon_putc.o)
-                0x000000009d0062f8                _mon_putc
- .text          0x000000009d00639c       0xb0 /opt/pic32mx/lib/startup.o
-                0x000000009d00640c                printStr
-                0x000000009d0063ec                printInt
-                0x000000009d0063cc                readInt
-                0x000000009d006444                resetCoreTimer
-                0x000000009d0063bc                putChar
-                0x000000009d00641c                readStr
-                0x000000009d00642c                exxt
-                0x000000009d0063fc                printInt10
-                0x000000009d00639c                inkey
-                0x000000009d0063ac                getChar
-                0x000000009d0063dc                readInt10
-                0x000000009d00643c                readCoreTimer
+                0x000000009d0073a0       0xa4 /opt/pic32mx/lib/libc.a(_mon_putc.o)
+                0x000000009d0073a0                _mon_putc
+ .text          0x000000009d007444       0xb0 /opt/pic32mx/lib/startup.o
+                0x000000009d0074b4                printStr
+                0x000000009d007494                printInt
+                0x000000009d007474                readInt
+                0x000000009d0074ec                resetCoreTimer
+                0x000000009d007464                putChar
+                0x000000009d0074c4                readStr
+                0x000000009d0074d4                exxt
+                0x000000009d0074a4                printInt10
+                0x000000009d007444                inkey
+                0x000000009d007454                getChar
+                0x000000009d007484                readInt10
+                0x000000009d0074e4                readCoreTimer
  *(.text.*personality*)
  *(.gnu.warning)
  *(.mips16.fn.*)
  *(.mips16.call.*)
-                0x000000009d00644c                _text_end = .
+                0x000000009d0074f4                _text_end = .
 
-.rodata         0x000000009d006450      0x244
+.rodata         0x000000009d0074f8      0x324
  *(.rodata .rodata.* .gnu.linkonce.r.*)
- .rodata        0x000000009d006450       0x10 project2_main.o
-                0x000000009d006454                KI_num
-                0x000000009d00645c                KP_num
-                0x000000009d006450                KI_den
-                0x000000009d006458                KP_den
- .rodata.cst8   0x000000009d006460       0x70 project2_main.o
-                                         0x78 (size before relaxing)
+ .rodata        0x000000009d0074f8       0x28 project2_main.o
+                0x000000009d0074fc                KI_num
+                0x000000009d007504                KP_num
+                0x000000009d0074f8                KI_den
+                0x000000009d007500                KP_den
+ .rodata.cst8   0x000000009d007520       0x88 project2_main.o
+                                         0x98 (size before relaxing)
  .rodata.str1.4
-                0x000000009d0064d0       0xfd project2_main.o
-                                        0x104 (size before relaxing)
- *fill*         0x000000009d0065cd        0x3 00
+                0x000000009d0075a8      0x1ad project2_main.o
+                                        0x1b4 (size before relaxing)
+ *fill*         0x000000009d007755        0x3 00
  .rodata.str1.4
-                0x000000009d0065d0       0x11 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
+                0x000000009d007758       0x11 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
                                          0x14 (size before relaxing)
- *fill*         0x000000009d0065e1        0x7 00
- .rodata.cst8   0x000000009d0065e8       0x10 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
+ *fill*         0x000000009d007769        0x7 00
+ .rodata.cst8   0x000000009d007770       0x10 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
                                          0x20 (size before relaxing)
- .rodata        0x000000009d0065f8       0x84 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
- .rodata        0x000000009d00667c       0x15 /opt/pic32mx/lib/startup.o
+ .rodata        0x000000009d007780       0x84 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
+ .rodata        0x000000009d007804       0x15 /opt/pic32mx/lib/startup.o
  *(.rodata1)
-                0x000000009d006694                . = ALIGN (0x4)
- *fill*         0x000000009d006691        0x3 00
+                0x000000009d00781c                . = ALIGN (0x4)
+ *fill*         0x000000009d007819        0x3 00
 
-.sdata2         0x000000009d006694        0x0
+.sdata2         0x000000009d00781c        0x0
  *(.sdata2 .sdata2.* .gnu.linkonce.s2.*)
-                0x000000009d006694                . = ALIGN (0x4)
+                0x000000009d00781c                . = ALIGN (0x4)
 
-.sbss2          0x000000009d006694        0x0
+.sbss2          0x000000009d00781c        0x0
  *(.sbss2 .sbss2.* .gnu.linkonce.sb2.*)
-                0x000000009d006694                . = ALIGN (0x4)
+                0x000000009d00781c                . = ALIGN (0x4)
 
 .eh_frame_hdr
  *(.eh_frame_hdr)
@@ -666,124 +692,125 @@ LOAD /opt/pic32mx/lib/startup.o
 .dbg_data       0x00000000a0000000        0x0
                 0x00000000a0000000                . = (. + DEFINED (_DEBUGGER)?0x200:0x0)
 
-.data           0x00000000a0000000      0x140 load address 0x000000009d006694
+.data           0x00000000a0000000      0x2e8 load address 0x000000009d00781c
                 0x00000000a0000000                _data_begin = .
  *(.data .data.* .gnu.linkonce.d.*)
  .data          0x00000000a0000000       0x30 project2_main.o
                 0x00000000a0000000                uart_offsets
- .data          0x00000000a0000030       0x70 /opt/pic32mx/lib/libm.a(sincos32.o)
-                0x00000000a0000030                sincon
-                0x00000000a0000068                coscon
- .data          0x00000000a00000a0       0xa0 /opt/pic32mx/lib/libc.a(_iob.o)
-                0x00000000a00000a0                _iob
+ .data          0x00000000a0000030      0x1a8 /opt/pic32mx/lib/libm.a(arc32.o)
+ .data          0x00000000a00001d8       0x70 /opt/pic32mx/lib/libm.a(sincos32.o)
+                0x00000000a00001d8                sincon
+                0x00000000a0000210                coscon
+ .data          0x00000000a0000248       0xa0 /opt/pic32mx/lib/libc.a(_iob.o)
+                0x00000000a0000248                _iob
  *(.gnu.linkonce.d.*personality*)
  *(.data1)
-                0x000000009d006694                _data_image_begin = LOADADDR (.data)
+                0x000000009d00781c                _data_image_begin = LOADADDR (.data)
 
 .eh_frame
  *(.eh_frame)
-                0x00000000a0008130                _gp = (ALIGN (0x10) + 0x7ff0)
+                0x00000000a00082e0                _gp = (ALIGN (0x10) + 0x7ff0)
 
 .got
  *(.got.plt)
  *(.got)
 
-.sdata          0x00000000a0000140       0x1c load address 0x000000009d0067d4
-                0x00000000a0000140                _sdata_begin = .
+.sdata          0x00000000a00002e8       0x1c load address 0x000000009d007b04
+                0x00000000a00002e8                _sdata_begin = .
  *(.sdata .sdata.* .gnu.linkonce.s.*)
- .sdata         0x00000000a0000140       0x14 project2_main.o
-                0x00000000a0000144                beacon_servo_sensor_limit_left
-                0x00000000a0000140                beacon_servo_sensor_limit_right
-                0x00000000a0000148                SERVO_WIDTH_MAX
-                0x00000000a000014c                SERVO_WIDTH_MIN
- .sdata         0x00000000a0000154        0x4 /opt/pic32mx/lib/libc.a(_iob.o)
-                0x00000000a0000154                _Files
- .sdata         0x00000000a0000158        0x4 /opt/pic32mx/lib/libc.a(c32_uart.o)
-                0x00000000a0000158                __C32_UART
-                0x00000000a000015c                _sdata_end = .
+ .sdata         0x00000000a00002e8       0x14 project2_main.o
+                0x00000000a00002ec                beacon_servo_sensor_limit_left
+                0x00000000a00002e8                beacon_servo_sensor_limit_right
+                0x00000000a00002f0                SERVO_WIDTH_MAX
+                0x00000000a00002f4                SERVO_WIDTH_MIN
+ .sdata         0x00000000a00002fc        0x4 /opt/pic32mx/lib/libc.a(_iob.o)
+                0x00000000a00002fc                _Files
+ .sdata         0x00000000a0000300        0x4 /opt/pic32mx/lib/libc.a(c32_uart.o)
+                0x00000000a0000300                __C32_UART
+                0x00000000a0000304                _sdata_end = .
 
 .lit8
  *(.lit8)
 
 .lit4
  *(.lit4)
-                0x00000000a000015c                . = ALIGN (0x4)
-                0x00000000a000015c                _data_end = .
-                0x00000000a000015c                _bss_begin = .
+                0x00000000a0000304                . = ALIGN (0x4)
+                0x00000000a0000304                _data_end = .
+                0x00000000a0000304                _bss_begin = .
 
-.sbss           0x00000000a0000160       0xe0
-                0x00000000a0000160                _sbss_begin = .
+.sbss           0x00000000a0000308       0xe0
+                0x00000000a0000308                _sbss_begin = .
  *(.dynsbss)
  *(.sbss .sbss.* .gnu.linkonce.sb.*)
- .sbss          0x00000000a0000160       0xa0 project2_main.o
-                0x00000000a0000160                beacon_servo_counter
-                0x00000000a0000168                beacon_servo_pos
-                0x00000000a000016c                bt_enable
-                0x00000000a0000164                beacon_servo_dir
- .sbss          0x00000000a0000200        0x4 /opt/pic32mx/lib/libc.a(buf.o)
- .sbss          0x00000000a0000204        0xc /opt/pic32mx/lib/libc.a(sbrk.o)
-                0x00000000a0000208                _minbrk
-                0x00000000a0000204                _maxbrk
+ .sbss          0x00000000a0000308       0xa0 project2_main.o
+                0x00000000a0000308                beacon_servo_counter
+                0x00000000a0000310                beacon_servo_pos
+                0x00000000a0000314                bt_enable
+                0x00000000a000030c                beacon_servo_dir
+ .sbss          0x00000000a00003a8        0x4 /opt/pic32mx/lib/libc.a(buf.o)
+ .sbss          0x00000000a00003ac        0xc /opt/pic32mx/lib/libc.a(sbrk.o)
+                0x00000000a00003b0                _minbrk
+                0x00000000a00003ac                _maxbrk
  *(.scommon)
- .scommon       0x00000000a0000210       0x20 project2_main.o
-                0x00000000a0000210                tick80ms
-                0x00000000a0000214                tick20ms
-                0x00000000a0000218                temp1
-                0x00000000a000021c                beh_av_col
-                0x00000000a0000224                tick40ms
-                0x00000000a0000228                tick160ms
-                0x00000000a000022c                tick10ms
- .scommon       0x00000000a0000230        0x4 /opt/pic32mx/lib/libc.a(stdclean.o)
-                0x00000000a0000230                _atexitptr
- .scommon       0x00000000a0000234        0x1 /opt/pic32mx/lib/libc.a(_iob.o)
-                0x00000000a0000234                _outdone
- *fill*         0x00000000a0000235        0x3 00
- .scommon       0x00000000a0000238        0x4 /opt/pic32mx/lib/libc.a(errno.o)
-                0x00000000a0000238                errno
- .scommon       0x00000000a000023c        0x4 /opt/pic32mx/lib/libc.a(tfiles.o)
-                0x00000000a000023c                _tfilesptr
-                0x00000000a0000240                _sbss_end = .
+ .scommon       0x00000000a00003b8       0x20 project2_main.o
+                0x00000000a00003b8                tick80ms
+                0x00000000a00003bc                tick20ms
+                0x00000000a00003c0                temp1
+                0x00000000a00003c4                beh_av_col
+                0x00000000a00003cc                tick40ms
+                0x00000000a00003d0                tick160ms
+                0x00000000a00003d4                tick10ms
+ .scommon       0x00000000a00003d8        0x4 /opt/pic32mx/lib/libc.a(stdclean.o)
+                0x00000000a00003d8                _atexitptr
+ .scommon       0x00000000a00003dc        0x1 /opt/pic32mx/lib/libc.a(_iob.o)
+                0x00000000a00003dc                _outdone
+ *fill*         0x00000000a00003dd        0x3 00
+ .scommon       0x00000000a00003e0        0x4 /opt/pic32mx/lib/libc.a(errno.o)
+                0x00000000a00003e0                errno
+ .scommon       0x00000000a00003e4        0x4 /opt/pic32mx/lib/libc.a(tfiles.o)
+                0x00000000a00003e4                _tfilesptr
+                0x00000000a00003e8                _sbss_end = .
 
-.bss            0x00000000a0000240      0x260
+.bss            0x00000000a00003e8      0x2c0
  *(.dynbss)
  *(.bss .bss.* .gnu.linkonce.b.*)
- .bss           0x00000000a0000240      0x100 project2_main.o
- .bss           0x00000000a0000340       0x18 /opt/pic32mx/lib/libc.a(sbrk.o)
+ .bss           0x00000000a00003e8      0x100 project2_main.o
+ .bss           0x00000000a00004e8       0x18 /opt/pic32mx/lib/libc.a(sbrk.o)
  *(COMMON)
- COMMON         0x00000000a0000358      0x108 project2_main.o
-                0x00000000a0000358                sensor_sensorReadings
-                0x00000000a00003b0                behavior_sensorReadings
-                0x00000000a0000408                beh_fol_wall
-                0x00000000a0000420                behavior_struct
-                0x00000000a0000448                analogSensors
- COMMON         0x00000000a0000460       0x40 /opt/pic32mx/lib/libc.a(_iob.o)
-                0x00000000a0000460                _sibuf
-                0x00000000a0000480                _sobuf
-                0x00000000a00004a0                . = ALIGN (0x4)
-                0x00000000a00004a0                . = ALIGN (0x4)
-                0x00000000a00004a0                _end = .
-                0x00000000a00004a0                _bss_end = .
+ COMMON         0x00000000a0000500      0x168 project2_main.o
+                0x00000000a0000500                sensor_sensorReadings
+                0x00000000a0000570                behavior_sensorReadings
+                0x00000000a00005e0                beh_fol_wall
+                0x00000000a0000608                behavior_struct
+                0x00000000a0000650                analogSensors
+ COMMON         0x00000000a0000668       0x40 /opt/pic32mx/lib/libc.a(_iob.o)
+                0x00000000a0000668                _sibuf
+                0x00000000a0000688                _sobuf
+                0x00000000a00006a8                . = ALIGN (0x4)
+                0x00000000a00006a8                . = ALIGN (0x4)
+                0x00000000a00006a8                _end = .
+                0x00000000a00006a8                _bss_end = .
 
-.persist        0x00000000a00004a0        0x0
+.persist        0x00000000a00006a8        0x0
  *(.persist)
-                0x00000000a00004a0                . = ALIGN (0x4)
+                0x00000000a00006a8                . = ALIGN (0x4)
 
-.heap           0x00000000a00004a0        0x0
-                0x00000000a00004a0                _heap = .
-                0x00000000a00004a0                . = (. + _min_heap_size)
+.heap           0x00000000a00006a8        0x0
+                0x00000000a00006a8                _heap = .
+                0x00000000a00006a8                . = (. + _min_heap_size)
 
-.stack          0x00000000a00004a0     0x2000
-                0x00000000a00004a0                _splim = .
-                0x00000000a00004a0                _SPLIM = .
-                0x00000000a00024a0                . = (. + _min_stack_size)
- *fill*         0x00000000a00004a0     0x2000 00
+.stack          0x00000000a00006a8     0x2000
+                0x00000000a00006a8                _splim = .
+                0x00000000a00006a8                _SPLIM = .
+                0x00000000a00026a8                . = (. + _min_stack_size)
+ *fill*         0x00000000a00006a8     0x2000 00
 
-.ramfunc        0x00000000a0002800        0x0 load address 0x000000009d0067f0
+.ramfunc        0x00000000a0002800        0x0 load address 0x000000009d007b20
                 0x00000000a0002800                _ramfunc_begin = .
  *(.ramfunc .ramfunc.*)
                 0x00000000a0002800                . = ALIGN (0x4)
                 0x00000000a0002800                _ramfunc_end = .
-                0x000000009d0067f0                _ramfunc_image_begin = LOADADDR (.ramfunc)
+                0x000000009d007b20                _ramfunc_image_begin = LOADADDR (.ramfunc)
                 0x0000000000000000                _ramfunc_length = SIZEOF (.ramfunc)
                 0x0000000000002800                _bmxdkpba_address = (_ramfunc_begin - 0xa0000000)
                 0x0000000000020000                _bmxdudba_address = 0x20000
@@ -791,22 +818,22 @@ LOAD /opt/pic32mx/lib/startup.o
                 0x00000000a0020000                _stack = (_ramfunc_length > 0x0)?(_ramfunc_begin - 0x4):0xa0020000
                 0x0000000000000001                ASSERT (((_min_stack_size + _min_heap_size) <= (_stack - _heap)), Not enough space to allocate both stack and heap.  Reduce heap and/or stack size.)
 
-.pdr            0x0000000000000000      0xa20
+.pdr            0x0000000000000000      0xbe0
  *(.pdr)
- .pdr           0x0000000000000000      0x7c0 project2_main.o
- .pdr           0x00000000000007c0       0x40 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
- .pdr           0x0000000000000800       0x20 /opt/pic32mx/lib/libc.a(exit.o)
- .pdr           0x0000000000000820       0x20 /opt/pic32mx/lib/libc.a(stdclean.o)
- .pdr           0x0000000000000840       0x20 /opt/pic32mx/lib/libc.a(_exit.o)
- .pdr           0x0000000000000860       0x20 /opt/pic32mx/lib/libc.a(fclose.o)
- .pdr           0x0000000000000880       0x20 /opt/pic32mx/lib/libc.a(fflush.o)
- .pdr           0x00000000000008a0       0x40 /opt/pic32mx/lib/libc.a(buf.o)
- .pdr           0x00000000000008e0       0xa0 /opt/pic32mx/lib/libc.a(sbrk.o)
- .pdr           0x0000000000000980       0x20 /opt/pic32mx/lib/libc.a(write.o)
- .pdr           0x00000000000009a0       0x20 /opt/pic32mx/lib/libc.a(remove.o)
- .pdr           0x00000000000009c0       0x20 /opt/pic32mx/lib/libc.a(close.o)
- .pdr           0x00000000000009e0       0x20 /opt/pic32mx/lib/libc.a(memset.o)
- .pdr           0x0000000000000a00       0x20 /opt/pic32mx/lib/libc.a(_mon_putc.o)
+ .pdr           0x0000000000000000      0x980 project2_main.o
+ .pdr           0x0000000000000980       0x40 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
+ .pdr           0x00000000000009c0       0x20 /opt/pic32mx/lib/libc.a(exit.o)
+ .pdr           0x00000000000009e0       0x20 /opt/pic32mx/lib/libc.a(stdclean.o)
+ .pdr           0x0000000000000a00       0x20 /opt/pic32mx/lib/libc.a(_exit.o)
+ .pdr           0x0000000000000a20       0x20 /opt/pic32mx/lib/libc.a(fclose.o)
+ .pdr           0x0000000000000a40       0x20 /opt/pic32mx/lib/libc.a(fflush.o)
+ .pdr           0x0000000000000a60       0x40 /opt/pic32mx/lib/libc.a(buf.o)
+ .pdr           0x0000000000000aa0       0xa0 /opt/pic32mx/lib/libc.a(sbrk.o)
+ .pdr           0x0000000000000b40       0x20 /opt/pic32mx/lib/libc.a(write.o)
+ .pdr           0x0000000000000b60       0x20 /opt/pic32mx/lib/libc.a(remove.o)
+ .pdr           0x0000000000000b80       0x20 /opt/pic32mx/lib/libc.a(close.o)
+ .pdr           0x0000000000000ba0       0x20 /opt/pic32mx/lib/libc.a(memset.o)
+ .pdr           0x0000000000000bc0       0x20 /opt/pic32mx/lib/libc.a(_mon_putc.o)
 
 .reginfo        0x0000000000000000       0x18
  *(.reginfo)
@@ -1075,9 +1102,9 @@ LOAD /opt/pic32mx/lib/startup.o
  *(.note.GNU-stack)
 OUTPUT(project2_main.elf elf32-tradlittlemips)
 
-.mdebug.abi32   0x000000009d0067f0        0x0
+.mdebug.abi32   0x000000009d007b20        0x0
 
-.rel.dyn        0x000000009d0067f0        0x0
+.rel.dyn        0x000000009d007b20        0x0
 
-.debug_ranges   0x000000009d0067f0       0x18
- .debug_ranges  0x000000009d0067f0       0x18 /opt/pic32mx/lib/libc.a(fclose.o)
+.debug_ranges   0x000000009d007b20       0x18
+ .debug_ranges  0x000000009d007b20       0x18 /opt/pic32mx/lib/libc.a(fclose.o)
