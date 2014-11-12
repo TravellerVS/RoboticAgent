@@ -2,7 +2,7 @@
 #define __RMI_P2_SENSORS
 
 
-#define MAX_NUM_POSITIONS		2000
+#define MAX_NUM_POSITIONS		1000
 
 typedef struct
 {
@@ -51,8 +51,8 @@ typedef struct
 void sensors_init();
 void sensors_finish();
 
-void refresh_sensorReadings();
+void refresh_sensorReadings(int state);
 SensorReadings get_sensorReadings();
-SensorReadings get_new_sensorReadings();
+SensorReadings get_new_sensorReadings(int state);
 
 #endif

@@ -7,6 +7,7 @@ SensorReadings sensor_sensorReadings;
 void readBeaconSensor();
 void readGroundSensor();
 void calculate_extra_values();
+void save_breadcrumbs();
 
 void sensors_init(){
 	enableObstSens();
@@ -18,16 +19,20 @@ void sensors_finish(){
 	disableGroundSens();
 }
 
-void refresh_sensorReadings(){	
+void refresh_sensorReadings(int state){	
 	readAnalogSensors();				// Fill in "analogSensors" structure
 	sensor_sensorReadings.obstacleSensor.front = analogSensors.obstSensFront;
 	sensor_sensorReadings.obstacleSensor.left = analogSensors.obstSensLeft;
 	sensor_sensorReadings.obstacleSensor.right = analogSensors.obstSensRight;
 	sensor_sensorReadings.batteryVoltage = analogSensors.batteryVoltage;
-	readGroundSensor();	// Read ground sensor
-	getRobotPos(&sensor_sensorReadings.positionSensor.x, &sensor_sensorReadings.positionSensor.y, &sensor_sensorReadings.positionSensor.t);  //Read position
-	readBeaconSensor();
 	
+	getRobotPos(&sensor_sensorReadings.positionSensor.x, &sensor_sensorReadings.positionSensor.y, &sensor_sensorReadings.positionSensor.t);  //Read position
+	if(state == STATE_SEARCHING_FOR_BEACON)
+	{
+		readBeaconSensor();
+		save_breadcrumbs();
+		readGroundSensor();
+	}	
 	calculate_extra_values();
 	/*
 	printf("x=%5.3f, y=%5.3f, t=%5.3f, relAngle=%5.3f , startX=%5.3f, startY=%5.3f \n", 
@@ -88,7 +93,6 @@ void readBeaconSensor(){
 	setServoPos(beacon_servo_pos);
 }
 
-int calculate_extra_values_counter = 0;
 void calculate_extra_values(){
 	if(sensor_sensorReadings.startingPosition.x == 0.0 && sensor_sensorReadings.startingPosition.y == 0.0 && sensor_sensorReadings.startingPosition.t == 0.0)
 	{
@@ -104,25 +108,31 @@ void calculate_extra_values(){
 	angle = (angle>M_PI) ? angle-2*M_PI : angle;
 	angle = (angle<-M_PI) ? angle+2*M_PI : angle;
 	sensor_sensorReadings.startingPosition.relative_direction = angle;	
-	
-	if(calculate_extra_values_counter%50 == 0)
+}
+
+int save_breadcrumbs_counter = 0;
+void save_breadcrumbs()
+{
+	if(save_breadcrumbs_counter%50 == 0)
 	{
 		sensor_sensorReadings.last_position_index++;
 		if(sensor_sensorReadings.last_position_index>=MAX_NUM_POSITIONS)
 			sensor_sensorReadings.last_position_index=MAX_NUM_POSITIONS-1;
-		calculate_extra_values_counter = calculate_extra_values_counter%50;
+		if(sensor_sensorReadings.last_position_index<0)
+			sensor_sensorReadings.last_position_index=0;
+		save_breadcrumbs_counter = save_breadcrumbs_counter%50;
 		sensor_sensorReadings.positionsHistory[sensor_sensorReadings.last_position_index].x = sensor_sensorReadings.positionSensor.x;
 		sensor_sensorReadings.positionsHistory[sensor_sensorReadings.last_position_index].y = sensor_sensorReadings.positionSensor.y;
 		sensor_sensorReadings.positionsHistory[sensor_sensorReadings.last_position_index].t = sensor_sensorReadings.positionSensor.t;		
 	}	
-	calculate_extra_values_counter++;
+	save_breadcrumbs_counter++;
 }
 
 SensorReadings get_sensorReadings(){
 	return sensor_sensorReadings;
 }
-SensorReadings get_new_sensorReadings(){
-	refresh_sensorReadings();
+SensorReadings get_new_sensorReadings(int state){
+	refresh_sensorReadings(state);
 	return sensor_sensorReadings;
 }
 
