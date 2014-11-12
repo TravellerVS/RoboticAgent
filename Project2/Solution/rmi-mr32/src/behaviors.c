@@ -19,10 +19,13 @@
 #define STOP_AT_BEACON_PRIORITY 	0
 #define AVOID_COLISION_PRIORITY 	1
 #define FOLLOW_BEACON_PRIORITY 		2
-#define FOLLOW_WALL_PRIORITY 		3
-#define WOUNDER_PRIORITY 			4
+#define AVOID_COLISION_PRIORITY2 	3
+#define FOLLOW_WALL_PRIORITY 		4
+#define WOUNDER_PRIORITY 			5
 
-#define NUMBER_OF_BEHAVIORS		5
+#define NUMBER_OF_BEHAVIORS		8
+
+
 
 bool test_avoid_colision();
 void avoid_colision();
@@ -73,28 +76,33 @@ typedef struct
 	int priority_list[NUMBER_OF_BEHAVIORS];
 	PositionSensor follow_wall_starting_point;//x and y from robot but t from the beacon direction
 	int at_beacon_area_counter;
+	
 } Behavior_struct_values;
 Behavior_struct_values behavior_struct;
 
 bool temp1;
-void execute_behavior(SensorReadings sensorReading)
+int execute_behavior()
 {
 	bool can_execute_list[NUMBER_OF_BEHAVIORS];
-	behavior_sensorReadings = sensorReading;
+	behavior_sensorReadings = get_new_sensorReadings();;
 	can_execute_list[STOP_AT_BEACON_ID] = test_stop_at_beacon();
 	can_execute_list[AVOID_COLISION_ID] = test_avoid_colision();
 	can_execute_list[FOLLOW_BEACON_ID] = test_follow_beacon();
 	can_execute_list[FOLLOW_WALL_ID] = test_follow_wall();
 	can_execute_list[WOUNDER_ID] = test_wounder();
+	can_execute_list[STOP_AT_STARTING_POINT_ID] = test_stop_at_starting_point();
+	can_execute_list[FOLLOW_STARTING_POINT_ID] = test_follow_starting_point();
 	
 	int follow_wall_priority = get_priority_from_id(FOLLOW_WALL_ID);
 	//check if there is a follow wall and follow beacon can execute and if the wall is between the robot and the beacon
 	if(can_execute_list[FOLLOW_WALL_ID] == true && can_execute_list[FOLLOW_BEACON_ID] == true && follow_wall_priority!= HIGH_PRIORITY
-		&&(	(behavior_sensorReadings.obstacleSensor.front >= DISTANCE_COLISION_FRONT && fabs(behavior_sensorReadings.beaconSensor.relative_direction) <= (M_PI/3))//from-30 to 30
-			|| (behavior_sensorReadings.obstacleSensor.right >= DISTANCE_COLISION_SIDES && behavior_sensorReadings.beaconSensor.relative_direction >= (M_PI/3))//>=30
-			|| (behavior_sensorReadings.obstacleSensor.left  >= DISTANCE_COLISION_SIDES && behavior_sensorReadings.beaconSensor.relative_direction <= -(M_PI/3))//<=-30
+		&&(	(behavior_sensorReadings.obstacleSensor.front >= DISTANCE_NEAR_FRONT && fabs(behavior_sensorReadings.beaconSensor.relative_direction) <= (M_PI/3))//from-30 to 30
+			|| (behavior_sensorReadings.obstacleSensor.right >= DISTANCE_FAR_SIDES && behavior_sensorReadings.beaconSensor.relative_direction >= (M_PI/3))//>=30
+			|| (behavior_sensorReadings.obstacleSensor.left  >= DISTANCE_FAR_SIDES && behavior_sensorReadings.beaconSensor.relative_direction <= -(M_PI/3))//<=-30
 			)
 		){
+		printf("CHANGE_PRIORITY \n");		
+		signal_long_LED();	
 		change_behavior_priority(FOLLOW_WALL_ID, HIGH_PRIORITY);//promote behavior
 		behavior_struct.follow_wall_starting_point.x = behavior_sensorReadings.positionSensor.x;
 		behavior_struct.follow_wall_starting_point.y = behavior_sensorReadings.positionSensor.y;
@@ -104,11 +112,15 @@ void execute_behavior(SensorReadings sensorReading)
 		//(behavior_struct.follow_wall_starting_point.t < (aprox_angle * 1.2) 
 		//&& behavior_struct.follow_wall_starting_point.t > (aprox_angle * 0.8))
 		){
-		double dx = (behavior_sensorReadings.positionSensor.x - behavior_struct.follow_wall_starting_point.x);
-		double dy = (behavior_sensorReadings.positionSensor.y - behavior_struct.follow_wall_starting_point.y);
-		double aprox_angle = atan(dy/dx);		
-		if(behavior_struct.follow_wall_starting_point.t < (aprox_angle * 1.2) 
-		&& behavior_struct.follow_wall_starting_point.t > (aprox_angle * 0.8))		{
+		double dx = (behavior_struct.follow_wall_starting_point.x - behavior_sensorReadings.positionSensor.x);
+		double dy = (behavior_struct.follow_wall_starting_point.y - behavior_sensorReadings.positionSensor.y);
+		double aprox_angle = atan2(dy,dx);
+		double start_point_angle = (behavior_struct.follow_wall_starting_point.t<0) ? (behavior_struct.follow_wall_starting_point.t + 2*M_PI) : behavior_struct.follow_wall_starting_point.t;
+		aprox_angle = (aprox_angle<0) ? (aprox_angle + 2*M_PI) : aprox_angle;
+		if(start_point_angle < (aprox_angle * 1.2) 
+		&& start_point_angle > (aprox_angle * 0.8)){
+			printf("..................RETURN_PRIORITY..................\n");
+			signal_long_LED();			
 			change_behavior_priority(FOLLOW_WALL_ID, FOLLOW_WALL_PRIORITY);//return normal priority
 			reset_follow_wall();
 			if(behavior_sensorReadings.beaconSensor.isVisible == true){
@@ -117,9 +129,9 @@ void execute_behavior(SensorReadings sensorReading)
 				rotateRel_naive(aprox_angle-behavior_sensorReadings.positionSensor.t);
 			}			
 		}else{
+			printf("..................CONINUE..................\n");
 			//continue and wait until something changes eg. when follow wall finishes
 		}
-		
 	}else{
 		//continue and wait until something changes eg. when follow wall finishes
 	}
@@ -140,16 +152,23 @@ void execute_behavior(SensorReadings sensorReading)
 					}					
 					break;
 				case STOP_AT_STARTING_POINT_ID:
-					movement_stop();
+					stop_at_starting_point();
+					signal_long_LED();
+					return 1;
 					break;
 				case AVOID_COLISION_ID:
 					avoid_colision();
 					break;
 				case FOLLOW_BEACON_ID:
 					follow_beacon();
+					reset_follow_wall();
+					break;
+				case FOLLOW_STARTING_POINT_ID:
+					follow_starting_point();
+					reset_follow_wall();
 					break;
 				case FOLLOW_WALL_ID:
-					follow_wall();					
+					follow_wall();				
 					break;
 				case WOUNDER_ID:
 					wounder();
@@ -160,7 +179,8 @@ void execute_behavior(SensorReadings sensorReading)
 			}
 			break;
 		}
-	}	
+	}
+	return 0;
 }
 
 Behavior_generic_vals beh_av_col;
@@ -237,8 +257,8 @@ void follow_wall(){
 	{			
 		beh_fol_wall.turningVals.direction = !beh_fol_wall.wall_side;
 		beh_fol_wall.turningVals.isActive = true;
-		printf("WALL in front");
-		printf("\n");
+		//printf("WALL in front");
+		//printf("\n");
 		movement_rotate(SPEED_ROTATE, beh_fol_wall.turningVals.direction);
 		return;
 	}
@@ -251,12 +271,12 @@ void follow_wall(){
 		movement_go_forward(SPEED_FOLLOW_WALL);		
 	}
 	else
-	{
-		beh_fol_wall.wallAngleSet = false;
+	{		
 		if(distance_sensor_value >= DISTANCE_FOLLOW_WALL_IDEAL_MIN)
 		{
+			beh_fol_wall.wallAngleSet = false;
 			beh_fol_wall.state=0;
-			printf("TURN_RADIUS_SMALL  ------beh_fol_wall.wall_side\n");
+			//printf("TURN_RADIUS_SMALL  ------beh_fol_wall.wall_side\n");
 			movement_travel_in_curve_radius_direction(SPEED_FOLLOW_WALL, TURN_RADIUS_SMALL, !beh_fol_wall.wall_side);
 		}
 		else
@@ -264,12 +284,12 @@ void follow_wall(){
 			if(beh_fol_wall.state!=2 && beh_fol_wall.wallAngleSet)
 			{
 				beh_fol_wall.state=2;
-				double angle = (beh_fol_wall.wall_side == RIGHT) ? (beh_fol_wall.wallAngle-M_PI/3) : (beh_fol_wall.wallAngle+M_PI/3);
+				double angle = (beh_fol_wall.wall_side == RIGHT) ? (beh_fol_wall.wallAngle+M_PI/4) : (beh_fol_wall.wallAngle-M_PI/4);
 								
 				angle = angle - behavior_sensorReadings.positionSensor.t;
 				rotateRel_naive(angle);
 			}
-			printf("TURN_RADIUS_MEDIUM  ++++++beh_fol_wall.wall_side\n");
+			//printf("TURN_RADIUS_MEDIUM  ++++++beh_fol_wall.wall_side\n");
 			movement_travel_in_curve_radius_direction(SPEED_FOLLOW_WALL, TURN_RADIUS_GO_ROUND_CORNER, beh_fol_wall.wall_side);
 			//todo malo poboljšati ovo			
 		}
@@ -288,7 +308,7 @@ bool test_follow_beacon(){
 }
 void follow_beacon(){
 	printf("FOLLOW_BEACON \n");
-	if(fabs(behavior_sensorReadings.beaconSensor.relative_direction) > (M_PI/3))//30 degrees
+	if(fabs(behavior_sensorReadings.beaconSensor.relative_direction) > (M_PI/6))//30 degrees
 	{
 		bool direction = (behavior_sensorReadings.beaconSensor.relative_direction > 0) ? RIGHT : LEFT;
 		movement_travel_in_curve_radius_direction(SPEED_MEDIUM, TURN_RADIUS_SMALL, direction);
@@ -322,42 +342,58 @@ bool test_wounder(){
 	return true;
 }
 void wounder(){
-	printf("WOUNDER \n");
+	//printf("WOUNDER \n");
 	movement_go_forward(SPEED_MEDIUM);
 }
 
 void reset_stop_at_starting_point(){
 	
 }
-bool test_stop_at_starting_point(){
+bool test_stop_at_starting_point(){	
+	double dx = fabs(behavior_sensorReadings.startingPosition.x - behavior_sensorReadings.positionSensor.x);
+	double dy = fabs(behavior_sensorReadings.startingPosition.y - behavior_sensorReadings.positionSensor.y);
 	
-	
-	
+	if(dx<=STARTING_POINT_BUFFER && dy<=STARTING_POINT_BUFFER){
+		return true;
+	}	
 	return false;
 }
 void stop_at_starting_point(){
-	
+	printf("..............STOP_AT_STARTING_POINT.........\n");
+	/*victory dance*/
+	movement_stop();	
 }
 void reset_follow_starting_point(){
 	
 }
 bool test_follow_starting_point(){
-	return false;
+	return true;
 }
 void follow_starting_point(){
+	//printf("FOLLOW_STARTING_POINT \n");
 	
+	if(fabs(behavior_sensorReadings.startingPosition.relative_direction) > (M_PI/6))//30 degrees
+	{
+		printf("ROTATE \n");
+		rotateRel_naive(behavior_sensorReadings.startingPosition.relative_direction);
+		//bool direction = (behavior_sensorReadings.startingPosition.relative_direction > 0) ? RIGHT : LEFT;
+		//movement_travel_in_curve_radius_direction(SPEED_MEDIUM, TURN_RADIUS_SMALL, direction);
+	}
+	else
+	{
+		printf("FORWARD \n");
+		movement_go_forward(SPEED_MEDIUM);
+	}
 }
 
-
-
-void signal_long_LED()
-{
+void signal_long_LED(){
+	movement_stop();
 	leds(15);
-	wait(5);
+	wait(2);
 	leds(0);
-	wait(5);
+	wait(2);
 	leds(15);
-	wait(5);
+	wait(2);
 	leds(0);
 }
 
@@ -381,6 +417,7 @@ void change_behavior_priority(int behavior_id, int new_priority)
 			break;			
 		}
 	}
+	//printf("current_priority:%d, behavior_id:%d, new_priority:%d \n",current_priority, behavior_id,new_priority);
 	if(current_priority==-1)
 		return;
 	if(current_priority<new_priority){		
@@ -388,27 +425,32 @@ void change_behavior_priority(int behavior_id, int new_priority)
 			//reverse values of element at index==priority and index==priority+1    hack->reversing values without using a temp variable for storing a value a=2,b=5; a=a+b; b=a-b; a= a-b; -> a=5,b=2
 			behavior_struct.priority_list[priority] += behavior_struct.priority_list[priority+1];
 			behavior_struct.priority_list[priority+1] = behavior_struct.priority_list[priority] - behavior_struct.priority_list[priority+1];
-			behavior_struct.priority_list[priority] -= behavior_struct.priority_list[priority+1]; 
+			behavior_struct.priority_list[priority] -= behavior_struct.priority_list[priority+1];
+			//printf("change1:%d %d\n",behavior_struct.priority_list[priority], behavior_struct.priority_list[priority+1]);
 		}
 	}else if(current_priority>new_priority){
-		for(priority=new_priority; priority>current_priority ; priority--){	
+		for(priority=current_priority; priority>new_priority ; priority--){	
 			//reverse values of element at index==priority and index==priority-1    hack->reversing values without using a temp variable for storing a value
 			behavior_struct.priority_list[priority] += behavior_struct.priority_list[priority-1];
 			behavior_struct.priority_list[priority-1] = behavior_struct.priority_list[priority] - behavior_struct.priority_list[priority-1];
 			behavior_struct.priority_list[priority] -= behavior_struct.priority_list[priority-1]; 
+			//printf("change2:%d %d\n",behavior_struct.priority_list[priority], behavior_struct.priority_list[priority-1]);
 		}
 	}else{
 		//allredy at that priority
 		return;
 	}
-	
+	/*
+	for(priority=0; priority<NUMBER_OF_BEHAVIORS; priority++){
+		printf("%d",behavior_struct.priority_list[priority]);
+	}
+	 * */
 }
 
 void reset_default_priority_list()
 {
 	int priority;
-	for(priority=0; priority<NUMBER_OF_BEHAVIORS; priority++)
-	{
+	for(priority=0; priority<NUMBER_OF_BEHAVIORS; priority++){
 		behavior_struct.priority_list[priority] = behavior_struct.default_priority_list[priority];
 	}
 }
@@ -418,8 +460,9 @@ void set_return_priority_list()
 	behavior_struct.priority_list[0] = STOP_AT_STARTING_POINT_ID;
 	behavior_struct.priority_list[1] = AVOID_COLISION_ID;	
 	behavior_struct.priority_list[2] = FOLLOW_STARTING_POINT_ID;
-	behavior_struct.priority_list[3] = FOLLOW_WALL_ID;
-	behavior_struct.priority_list[4] = WOUNDER_ID;
+	behavior_struct.priority_list[3] = AVOID_COLISION_ID;	
+	behavior_struct.priority_list[4] = FOLLOW_WALL_ID;
+	behavior_struct.priority_list[5] = WOUNDER_ID;
 	reset_stop_at_starting_point();	
 	reset_avoid_colision();
 	reset_follow_starting_point();
@@ -432,6 +475,7 @@ void behaviors_init(){
 	behavior_struct.default_priority_list[STOP_AT_BEACON_PRIORITY] = STOP_AT_BEACON_ID;
 	behavior_struct.default_priority_list[AVOID_COLISION_PRIORITY] = AVOID_COLISION_ID;	
 	behavior_struct.default_priority_list[FOLLOW_BEACON_PRIORITY] = FOLLOW_BEACON_ID;
+	behavior_struct.default_priority_list[AVOID_COLISION_PRIORITY2] = AVOID_COLISION_ID;	
 	behavior_struct.default_priority_list[FOLLOW_WALL_PRIORITY] = FOLLOW_WALL_ID;
 	behavior_struct.default_priority_list[WOUNDER_PRIORITY] = WOUNDER_ID;
 	

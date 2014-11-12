@@ -36,6 +36,7 @@ void movement_stop(){
 
 void driveMotors(int speeLeft, int speedRight){
 	setVel2(speeLeft, speedRight);
+	//setVel2(0, 0);
 }
 void movement_rotate(int speed, bool direction){
 	if(direction == LEFT)

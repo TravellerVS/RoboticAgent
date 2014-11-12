@@ -1,6 +1,6 @@
 #include "rmi-mr32.c"
 //#include "bluetooth_comm.h"
-#include "bluetooth_comm.c"
+//#include "bluetooth_comm.c"
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
@@ -39,16 +39,24 @@ int main(void){
 				break;
 			}
 			waitTick40ms();						// Wait for next 40ms tick
-			mySensorReadings = get_new_sensorReadings();
-			refresh_sensorReadings();
-			execute_behavior(mySensorReadings);
+			//SensorReadings sensorReading = get_new_sensorReadings();
+			//refresh_sensorReadings();
+			if(execute_behavior()==1){				
+				/*victory dance*/
+				//rotateRel_naive(-M_PI/4);
+				//rotateRel_naive(M_PI/2);
+				//rotateRel_naive(-M_PI/4);
+				behaviors_finish();
+				sensors_finish();
+				return 0;
+			}
 		};
 		behaviors_finish();
 		sensors_finish();
 		/*victory dance*/
-		//rotateRel_naive(-M_PI/4);
-		//rotateRel_naive(M_PI/2);
-		//rotateRel_naive(-M_PI/4);
+		rotateRel_naive(-M_PI/4);
+		rotateRel_naive(M_PI/2);
+		rotateRel_naive(-M_PI/4);
 	}
 	return 0;
 }
