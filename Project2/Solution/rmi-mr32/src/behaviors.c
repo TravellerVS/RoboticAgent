@@ -13,7 +13,7 @@
 #define FOLLOW_STARTING_POINT_ID		6
 
 //lower value means a high priority
-#define HIGH_PRIORITY 				2
+#define HIGH_PRIORITY 				1
 #define LOW_PRIORITY 				3
 
 #define STOP_AT_BEACON_PRIORITY 	0
@@ -81,10 +81,13 @@ typedef struct
 Behavior_struct_values behavior_struct;
 
 bool temp1;
+int behaviors_state = STATE_SEARCHING_FOR_BEACON;
 int execute_behavior()
 {
 	bool can_execute_list[NUMBER_OF_BEHAVIORS];
-	behavior_sensorReadings = get_new_sensorReadings();;
+	
+	behavior_sensorReadings = get_new_sensorReadings(behaviors_state);;
+	
 	can_execute_list[STOP_AT_BEACON_ID] = test_stop_at_beacon();
 	can_execute_list[AVOID_COLISION_ID] = test_avoid_colision();
 	can_execute_list[FOLLOW_BEACON_ID] = test_follow_beacon();
@@ -148,7 +151,8 @@ int execute_behavior()
 					{
 						//signal that beacon 
 						signal_long_LED();		
-						set_return_priority_list();						
+						set_return_priority_list();
+						behaviors_state = STATE_RETURNING_HOME;
 					}					
 					break;
 				case STOP_AT_STARTING_POINT_ID:
@@ -284,7 +288,7 @@ void follow_wall(){
 			if(beh_fol_wall.state!=2 && beh_fol_wall.wallAngleSet)
 			{
 				beh_fol_wall.state=2;
-				double angle = (beh_fol_wall.wall_side == RIGHT) ? (beh_fol_wall.wallAngle+M_PI/4) : (beh_fol_wall.wallAngle-M_PI/4);
+				double angle = (beh_fol_wall.wall_side == RIGHT) ? (beh_fol_wall.wallAngle+M_PI/6) : (beh_fol_wall.wallAngle-M_PI/6);
 								
 				angle = angle - behavior_sensorReadings.positionSensor.t;
 				rotateRel_naive(angle);
@@ -363,19 +367,38 @@ void stop_at_starting_point(){
 	/*victory dance*/
 	movement_stop();	
 }
+int follow_starting_point_last_point;
 void reset_follow_starting_point(){
-	
+	follow_starting_point_last_point = behavior_sensorReadings.last_position_index;
 }
 bool test_follow_starting_point(){
 	return true;
 }
-void follow_starting_point(){
-	//printf("FOLLOW_STARTING_POINT \n");
+void follow_starting_point(){	
+	double dx = fabs(behavior_sensorReadings.positionsHistory[follow_starting_point_last_point].x - behavior_sensorReadings.positionSensor.x);
+	double dy = fabs(behavior_sensorReadings.positionsHistory[follow_starting_point_last_point].y - behavior_sensorReadings.positionSensor.y);
 	
-	if(fabs(behavior_sensorReadings.startingPosition.relative_direction) > (M_PI/6))//30 degrees
+	if(dx<=OTHER_POINT_BUFFER && dy<=OTHER_POINT_BUFFER){
+		follow_starting_point_last_point--;
+		follow_starting_point();
+		return;
+	}
+	follow_starting_point_last_point = 0;
+	
+	printf("x=%5.3f, y=%5.3f, t=%5.3f, relAngle=%5.3f , startX=%5.3f, startY=%5.3f \n", 
+	behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, behavior_sensorReadings.positionSensor.t, 
+	behavior_sensorReadings.startingPosition.relative_direction, 
+	behavior_sensorReadings.positionsHistory[follow_starting_point_last_point].x, behavior_sensorReadings.positionsHistory[follow_starting_point_last_point].y );
+	
+	
+	double relative_direction = atan2(dy, dx) - behavior_sensorReadings.positionSensor.t;
+	relative_direction = (relative_direction>M_PI) ? relative_direction-2*M_PI : relative_direction;
+	relative_direction = (relative_direction<-M_PI) ? relative_direction+2*M_PI : relative_direction;		
+	//printf("FOLLOW_STARTING_POINT \n");
+	if(fabs(relative_direction) > (M_PI/6))//30 degrees
 	{
 		printf("ROTATE \n");
-		rotateRel_naive(behavior_sensorReadings.startingPosition.relative_direction);
+		rotateRel_naive(relative_direction);
 		//bool direction = (behavior_sensorReadings.startingPosition.relative_direction > 0) ? RIGHT : LEFT;
 		//movement_travel_in_curve_radius_direction(SPEED_MEDIUM, TURN_RADIUS_SMALL, direction);
 	}
@@ -471,7 +494,7 @@ void set_return_priority_list()
 }
 
 void behaviors_init(){
-	
+	behaviors_state = STATE_SEARCHING_FOR_BEACON;
 	behavior_struct.default_priority_list[STOP_AT_BEACON_PRIORITY] = STOP_AT_BEACON_ID;
 	behavior_struct.default_priority_list[AVOID_COLISION_PRIORITY] = AVOID_COLISION_ID;	
 	behavior_struct.default_priority_list[FOLLOW_BEACON_PRIORITY] = FOLLOW_BEACON_ID;
