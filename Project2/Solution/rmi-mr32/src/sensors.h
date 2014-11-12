@@ -1,6 +1,9 @@
 #ifndef __RMI_P2_SENSORS
 #define __RMI_P2_SENSORS
 
+
+#define MAX_NUM_POSITIONS		2000
+
 typedef struct
 {
 	bool isVisible;
@@ -39,6 +42,9 @@ typedef struct
 	int groundSensor;
 	bool atBeaconArea;	
 	int batteryVoltage;
+	
+	PositionSensor positionsHistory[MAX_NUM_POSITIONS];
+	int last_position_index;	
 } SensorReadings;
 
 

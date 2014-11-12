@@ -2,7 +2,7 @@
 #define __RMI_P2_BEHAVIORS
 
 #include "sensors.h"
-void execute_behavior(SensorReadings sensorReading);
+int execute_behavior();
 void behaviors_init();
 void behaviors_finish();
 #endif
