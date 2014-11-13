@@ -82,6 +82,8 @@ Behavior_struct_values behavior_struct;
 
 bool temp1;
 int behaviors_state = STATE_SEARCHING_FOR_BEACON;
+
+double next_point_rel_dir = 0.0;
 int execute_behavior(int behavior_control)
 {
 	bool can_execute_list[NUMBER_OF_BEHAVIORS];
@@ -141,19 +143,26 @@ int execute_behavior(int behavior_control)
 		can_execute_list[STOP_AT_STARTING_POINT_ID] = false;
 		can_execute_list[FOLLOW_STARTING_POINT_ID] = false;
 	}
-	
+	/*
+	if(can_execute_list[FOLLOW_WALL_ID] == true && can_execute_list[AVOID_COLISION_ID] == true && follow_wall_priority!= HIGH_PRIORITY
+		&& next_point_rel_dir!=0.0){		
+		change_behavior_priority(FOLLOW_WALL_ID, HIGH_PRIORITY);//promote behavior
+		behavior_struct.follow_wall_starting_point.x = behavior_sensorReadings.positionSensor.x;
+		behavior_struct.follow_wall_starting_point.y = behavior_sensorReadings.positionSensor.y;
+		behavior_struct.follow_wall_starting_point.t = next_point_rel_dir;
+		printf("CHANGE_PRIORITY start_dir=%f\n",behavior_struct.follow_wall_starting_point.t);
+		signal_long_LED();
+	}else*/ 
 	if(can_execute_list[FOLLOW_WALL_ID] == true && can_execute_list[FOLLOW_BEACON_ID] == true && follow_wall_priority!= HIGH_PRIORITY
 		&&(	(behavior_sensorReadings.obstacleSensor.front >= DISTANCE_NEAR_FRONT && fabs(behavior_sensorReadings.beaconSensor.relative_direction) <= (M_PI/12))//from-30 to 30
 			|| (behavior_sensorReadings.obstacleSensor.right >= DISTANCE_NEAR_SIDES && behavior_sensorReadings.beaconSensor.relative_direction >= (M_PI/4))//>=30
 			|| (behavior_sensorReadings.obstacleSensor.left  >= DISTANCE_NEAR_SIDES && behavior_sensorReadings.beaconSensor.relative_direction <= -(M_PI/4))//<=-30
 			)
 		){
-		
 		change_behavior_priority(FOLLOW_WALL_ID, HIGH_PRIORITY);//promote behavior
 		behavior_struct.follow_wall_starting_point.x = behavior_sensorReadings.positionSensor.x;
 		behavior_struct.follow_wall_starting_point.y = behavior_sensorReadings.positionSensor.y;
 		behavior_struct.follow_wall_starting_point.t = behavior_sensorReadings.beaconSensor.apsolute_direction;
-		
 		printf("CHANGE_PRIORITY start_dir=%f\n",behavior_struct.follow_wall_starting_point.t);		
 		signal_long_LED();	
 		
@@ -459,6 +468,19 @@ void follow_starting_point(){
 	double dx = behavior_sensorReadings.positionSensor.x - dest_x;
 	double dy = behavior_sensorReadings.positionSensor.y - dest_y;
 	double dz = sqrt(dx*dx+dy*dy);
+	int i=0;
+	for(i= follow_starting_point_last_point-1;i>0; i--)
+	{
+		double tdx = dest_x - behavior_sensorReadings.positionsHistory[i].x;
+		double tdy = dest_x - behavior_sensorReadings.positionsHistory[i].y;
+		double tdz = sqrt(tdx*tdx+tdy*tdy);
+		if(tdz<OTHER_POINT_BUFFER){
+			follow_starting_point_last_point = i;
+			follow_starting_point();
+			return;
+		}		
+	}
+	
 	if(dz<=OTHER_POINT_BUFFER && follow_starting_point_last_point!=0){
 		follow_starting_point_last_point--;
 		follow_starting_point();
@@ -468,12 +490,12 @@ void follow_starting_point(){
 	double relative_direction = atan2(dy, dx) - behavior_sensorReadings.positionSensor.t;
 	relative_direction = (relative_direction>M_PI) ? relative_direction-2*M_PI : relative_direction;
 	relative_direction = (relative_direction<-M_PI) ? relative_direction+2*M_PI : relative_direction;	
-	
+	next_point_rel_dir=relative_direction;
 	printf("follow_starting_point_last_point =%d, x=%5.3f, y=%5.3f, t=%5.3f, relAngle=%5.3f , startX=%5.3f, startY=%5.3f \n",
-	follow_starting_point_last_point,
-	behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, behavior_sensorReadings.positionSensor.t, 
-	relative_direction, 
-	dest_x, dest_y );
+		follow_starting_point_last_point,
+		behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, behavior_sensorReadings.positionSensor.t, 
+		relative_direction, 
+		dest_x, dest_y );
 	
 	//printf("FOLLOW_STARTING_POINT \n");
 	if(fabs(relative_direction) > (M_PI/6))//30 degrees
