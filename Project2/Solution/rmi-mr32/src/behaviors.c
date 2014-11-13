@@ -61,7 +61,7 @@ void set_return_priority_list();
 int get_priority_from_id(int id);
 void change_behavior_priority(int behavior_id, int new_priority);
 void signal_long_LED();
-
+void signal_short_LED();
 typedef struct
 {
 	bool direction;
@@ -150,6 +150,7 @@ int execute_behavior(int behavior_control)
 	/**
 	 * changing the priority list of the behaviors
 	 * */
+	
 	/*
 	if(can_execute_list[FOLLOW_WALL_ID] == true && can_execute_list[AVOID_COLISION_ID] == true && follow_wall_priority!= HIGH_PRIORITY
 		&& next_point_rel_dir!=0.0){		
@@ -158,8 +159,8 @@ int execute_behavior(int behavior_control)
 		behavior_struct.follow_wall_starting_point.y = behavior_sensorReadings.positionSensor.y;
 		behavior_struct.follow_wall_starting_point.t = next_point_rel_dir;
 		printf("CHANGE_PRIORITY start_dir=%f\n",behavior_struct.follow_wall_starting_point.t);
-		signal_long_LED();
-	}else*/ 
+		signal_short_LED();
+	}else*/
 	if(can_execute_list[FOLLOW_WALL_ID] == true && can_execute_list[FOLLOW_BEACON_ID] == true && follow_wall_priority!= HIGH_PRIORITY
 		&&(	(behavior_sensorReadings.obstacleSensor.front >= DISTANCE_NEAR_FRONT && fabs(behavior_sensorReadings.beaconSensor.relative_direction) <= (M_PI/12))//from-30 to 30
 			|| (behavior_sensorReadings.obstacleSensor.right >= DISTANCE_NEAR_SIDES && behavior_sensorReadings.beaconSensor.relative_direction >= (M_PI/4))//>=30
@@ -171,7 +172,7 @@ int execute_behavior(int behavior_control)
 		behavior_struct.follow_wall_starting_point.y = behavior_sensorReadings.positionSensor.y;
 		behavior_struct.follow_wall_starting_point.t = behavior_sensorReadings.beaconSensor.apsolute_direction;
 		printf("CHANGE_PRIORITY start_dir=%f\n",behavior_struct.follow_wall_starting_point.t);		
-		signal_long_LED();	
+		signal_short_LED();	
 		
 	}else if(follow_wall_priority == HIGH_PRIORITY 
 		//&& 
@@ -198,7 +199,7 @@ int execute_behavior(int behavior_control)
 		//&& start_point_angle > (aprox_angle * 0.8))
 		if(fabs(aprox_angle) <= (M_PI/12) && dz>=DISTANCE_XY_CLOSE){
 			printf("..................RETURN_PRIORITY..................\n");
-			signal_long_LED();			
+			signal_short_LED();			
 			change_behavior_priority(FOLLOW_WALL_ID, FOLLOW_WALL_PRIORITY);//return normal priority
 			reset_follow_wall();
 			if(behavior_sensorReadings.beaconSensor.isVisible == true){
@@ -298,6 +299,7 @@ typedef struct
 	int state;
 	double wallAngle;
 	bool wallAngleSet;
+	int curveCounter;
 } Behavior_follow_wall_vals;
 Behavior_follow_wall_vals beh_fol_wall;
 void reset_follow_wall(){
@@ -307,6 +309,7 @@ void reset_follow_wall(){
 	beh_fol_wall.state = 0;
 	beh_fol_wall.wallAngle = 0.0;
 	beh_fol_wall.wallAngleSet = false;
+	beh_fol_wall.curveCounter = 0;
 }
 bool test_follow_wall(){
 	if(behavior_sensorReadings.obstacleSensor.front >= DISTANCE_FOLLOW_WALL_FRONT 
@@ -346,6 +349,11 @@ void follow_wall(){
 		return;
 	}
 	
+	if(beh_fol_wall.state!=2 && beh_fol_wall.wallAngleSet)
+	{
+		beh_fol_wall.curveCounter = 0;
+	}
+	
 	if(distance_sensor_value >= DISTANCE_FOLLOW_WALL_IDEAL_MAX && distance_sensor_value <= DISTANCE_FOLLOW_WALL_IDEAL_MIN)
 	{
 		beh_fol_wall.state=1;
@@ -371,6 +379,11 @@ void follow_wall(){
 				beh_fol_wall.wallAngleSet = false;				
 				angle = angle - behavior_sensorReadings.positionSensor.t;
 				rotateRel_naive(angle);
+			}
+			beh_fol_wall.curveCounter++;
+			if(beh_fol_wall.curveCounter>=200)
+			{
+				reset_follow_wall();
 			}
 			//printf("TURN_RADIUS_MEDIUM  ++++++beh_fol_wall.wall_side\n");
 			movement_travel_in_curve_radius_direction(SPEED_FOLLOW_WALL, TURN_RADIUS_GO_ROUND_CORNER, beh_fol_wall.wall_side);
@@ -528,6 +541,12 @@ void signal_long_LED(){
 	wait(2);
 	leds(0);
 	wait(2);
+	leds(15);
+	wait(2);
+	leds(0);
+}
+void signal_short_LED(){
+	movement_stop();
 	leds(15);
 	wait(2);
 	leds(0);
