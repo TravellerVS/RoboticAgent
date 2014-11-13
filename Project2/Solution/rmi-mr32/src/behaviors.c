@@ -94,6 +94,8 @@ int execute_behavior(int behavior_control)
 	can_execute_list[FOLLOW_BEACON_ID] = false;
 	can_execute_list[FOLLOW_WALL_ID] = false;
 	
+	//for demonstarion
+	//for changing behaviors from all to avoid colisio, to follow wall and to follow and stop at beacon
 	if(behavior_control == 1)
 	{
 		//only avoid collision behavior
@@ -143,6 +145,11 @@ int execute_behavior(int behavior_control)
 		can_execute_list[STOP_AT_STARTING_POINT_ID] = false;
 		can_execute_list[FOLLOW_STARTING_POINT_ID] = false;
 	}
+	
+	
+	/**
+	 * changing the priority list of the behaviors
+	 * */
 	/*
 	if(can_execute_list[FOLLOW_WALL_ID] == true && can_execute_list[AVOID_COLISION_ID] == true && follow_wall_priority!= HIGH_PRIORITY
 		&& next_point_rel_dir!=0.0){		
@@ -218,6 +225,9 @@ int execute_behavior(int behavior_control)
 					behavior_struct.at_beacon_area_counter++;
 					if(behavior_struct.at_beacon_area_counter>10)
 					{
+						/**
+						 * preparing for returning home
+						 * */
 						//signal that beacon 
 						signal_long_LED();		
 						set_return_priority_list();
