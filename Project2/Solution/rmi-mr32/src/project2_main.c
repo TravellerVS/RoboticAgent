@@ -25,8 +25,11 @@ int main(void){
 	{		
 		int behavior_control = 0;
 		SensorReadings mySensorReadings;
-		printf("Press start to continue\n");
+		printf("Press start to continue\n");		
+				
 		while(!startButton()){
+			//for demonstarion
+			//for changing behaviors from all to avoid colisio, to follow wall and to follow and stop at beacon
 			if(stopButton()){
 				behavior_control++;
 				behavior_control=behavior_control%4;
