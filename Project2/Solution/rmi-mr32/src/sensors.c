@@ -58,7 +58,7 @@ void readGroundSensor(){
 }
 
 #define BEACON_SENSOR_SERVO_LIMIT 15
-#define BEACON_SENSOR_SERVO_BUFFER 4
+#define BEACON_SENSOR_SERVO_BUFFER 3
 
 int beacon_servo_pos = 0;
 int beacon_servo_dir = LEFT;
@@ -69,7 +69,7 @@ int beacon_servo_sensor_limit_right = BEACON_SENSOR_SERVO_LIMIT;
 void readBeaconSensor(){
 	if(readBeaconSens()){
 		sensor_sensorReadings.beaconSensor.isVisible = true;
-		sensor_sensorReadings.beaconSensor.relative_direction = (beacon_servo_pos/15.0*M_PI);//normalizing angle in radians
+		sensor_sensorReadings.beaconSensor.relative_direction = (beacon_servo_pos/15.0*M_PI/2);//normalizing angle in radians
 		beacon_servo_counter = 0;
 		beacon_servo_sensor_limit_left = ((beacon_servo_pos - BEACON_SENSOR_SERVO_BUFFER) >= -BEACON_SENSOR_SERVO_LIMIT) ? (beacon_servo_pos - BEACON_SENSOR_SERVO_BUFFER) : -BEACON_SENSOR_SERVO_LIMIT;
 		beacon_servo_sensor_limit_right = ((beacon_servo_pos + BEACON_SENSOR_SERVO_BUFFER) <= BEACON_SENSOR_SERVO_LIMIT) ? (beacon_servo_pos + BEACON_SENSOR_SERVO_BUFFER) :  BEACON_SENSOR_SERVO_LIMIT;
@@ -86,9 +86,9 @@ void readBeaconSensor(){
 		beacon_servo_dir = !beacon_servo_dir;//change direction
 	}
 	if(beacon_servo_dir == LEFT){
-		beacon_servo_pos--;
+		beacon_servo_pos-=2;
 	}else{
-		beacon_servo_pos++;
+		beacon_servo_pos+=2;
 	}	
 	setServoPos(beacon_servo_pos);
 }
@@ -101,7 +101,7 @@ void calculate_extra_values(){
 		sensor_sensorReadings.startingPosition.t =  sensor_sensorReadings.positionSensor.t;
 	}
 	sensor_sensorReadings.beaconSensor.apsolute_direction = (sensor_sensorReadings.beaconSensor.relative_direction + sensor_sensorReadings.positionSensor.t);
-	
+	//printf("beaconSensor.apsolute_direction=%f\n",sensor_sensorReadings.beaconSensor.apsolute_direction);
 	double dx = (sensor_sensorReadings.startingPosition.x - sensor_sensorReadings.positionSensor.x);
 	double dy = (sensor_sensorReadings.startingPosition.y - sensor_sensorReadings.positionSensor.y);
 	double angle = atan2(dy, dx) - sensor_sensorReadings.positionSensor.t;
@@ -113,18 +113,19 @@ void calculate_extra_values(){
 int save_breadcrumbs_counter = 0;
 void save_breadcrumbs()
 {
-	if(save_breadcrumbs_counter%50 == 0)
+	if(save_breadcrumbs_counter%10 == 0)
 	{
 		sensor_sensorReadings.last_position_index++;
 		if(sensor_sensorReadings.last_position_index>=MAX_NUM_POSITIONS)
 			sensor_sensorReadings.last_position_index=MAX_NUM_POSITIONS-1;
 		if(sensor_sensorReadings.last_position_index<0)
 			sensor_sensorReadings.last_position_index=0;
-		save_breadcrumbs_counter = save_breadcrumbs_counter%50;
+		save_breadcrumbs_counter = save_breadcrumbs_counter%10;
 		sensor_sensorReadings.positionsHistory[sensor_sensorReadings.last_position_index].x = sensor_sensorReadings.positionSensor.x;
 		sensor_sensorReadings.positionsHistory[sensor_sensorReadings.last_position_index].y = sensor_sensorReadings.positionSensor.y;
-		sensor_sensorReadings.positionsHistory[sensor_sensorReadings.last_position_index].t = sensor_sensorReadings.positionSensor.t;		
-	}	
+		sensor_sensorReadings.positionsHistory[sensor_sensorReadings.last_position_index].t = sensor_sensorReadings.positionSensor.t;
+		printf("last_position_index=%d \n", sensor_sensorReadings.last_position_index);
+	}		
 	save_breadcrumbs_counter++;
 }
 

@@ -23,9 +23,18 @@ int main(void){
 	printf("RMI-project2, robot %d\n\n\n", ROBOT);
 	while(1)
 	{		
+		int behavior_control = 0;
 		SensorReadings mySensorReadings;
 		printf("Press start to continue\n");
-		while(!startButton());
+		while(!startButton()){
+			if(stopButton()){
+				behavior_control++;
+				behavior_control=behavior_control%4;
+				leds(behavior_control);
+				wait(3);
+				while(stopButton());
+			}			
+		};
 		//waitTick40ms();
 		//while(stopButton());
 		sensors_init();
@@ -41,22 +50,19 @@ int main(void){
 			waitTick40ms();						// Wait for next 40ms tick
 			//SensorReadings sensorReading = get_new_sensorReadings();
 			//refresh_sensorReadings();
-			if(execute_behavior()==1){				
-				/*victory dance*/
-				//rotateRel_naive(-M_PI/4);
-				//rotateRel_naive(M_PI/2);
-				//rotateRel_naive(-M_PI/4);
+			if(execute_behavior(behavior_control)==1){				
+				
 				behaviors_finish();
 				sensors_finish();
+				/*victory dance  :) */
+				rotateRel_naive(-M_PI/4);
+				rotateRel_naive(M_PI/2);
+				rotateRel_naive(-M_PI/4);
 				return 0;
 			}
 		};
 		behaviors_finish();
 		sensors_finish();
-		/*victory dance*/
-		rotateRel_naive(-M_PI/4);
-		rotateRel_naive(M_PI/2);
-		rotateRel_naive(-M_PI/4);
 	}
 	return 0;
 }
