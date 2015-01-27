@@ -21,7 +21,7 @@
 #ifndef __MR32_H
 #define __MR32_H
 
-#define ROBOT 9
+#define ROBOT 12 
 
 #ifndef ROBOT
 	#error "ROBOT number have to be defined (ex: #define ROBOT 0)"

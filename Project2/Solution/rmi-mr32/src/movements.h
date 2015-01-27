@@ -1,5 +1,5 @@
-#ifndef __RMI_P2_MOVEMENTS
-#define __RMI_P2_MOVEMENTS
+#ifndef __RMI_FP_MOVEMENTS_H
+#define __RMI_FP_MOVEMENTS_H
 
 void rotateRel_naive(double deltaAngle);
 void movement_go_forward(int speed);

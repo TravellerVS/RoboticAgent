@@ -1,5 +1,5 @@
-#ifndef __RMI_P2_BEHAVIORS
-#define __RMI_P2_BEHAVIORS
+#ifndef __RMI_FP_BEHAVIORS_H
+#define __RMI_FP_BEHAVIORS_H
 
 #include "sensors.h"
 int execute_behavior(int behavior_control);
