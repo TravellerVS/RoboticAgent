@@ -1,14 +1,21 @@
+//these should be libraries
 #include "rmi-mr32.c"
+#include "behaviors.c"
+#include "movements.c"
+#include "sensors.c"
+#include "helperFunctions.c"
+#include "map.c"
+
 //#include "bluetooth_comm.h"
 //#include "bluetooth_comm.c"
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
 
-//#include "rmi-mr32.c"
-#include "behaviors.c"
-#include "movements.c"
-#include "sensors.c"
+#include "rmi-mr32.h"
+#include "behaviors.h"
+#include "movements.h"
+#include "sensors.h"
 
 
 int main(void){
@@ -50,9 +57,8 @@ int main(void){
 				while(stopButton());
 				break;
 			}
-			waitTick40ms();						// Wait for next 40ms tick
-			//SensorReadings sensorReading = get_new_sensorReadings();
-			//refresh_sensorReadings();
+			//waitTick40ms();						// Wait for next 40ms tick
+			wait(1);	
 			if(execute_behavior(behavior_control)==1){				
 				
 				behaviors_finish();
@@ -63,6 +69,7 @@ int main(void){
 				rotateRel_naive(-M_PI/4);
 				return 0;
 			}
+			
 		};
 		behaviors_finish();
 		sensors_finish();

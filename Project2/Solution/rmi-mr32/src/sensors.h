@@ -1,11 +1,13 @@
-#ifndef __RMI_P2_SENSORS
-#define __RMI_P2_SENSORS
+#ifndef __RMI_FP_SENSORS_H
+#define __RMI_FP_SENSORS_H
 
-
+/** \brief maximum number of points contained in breadcrums (robots memory for past positions)
+ * */
 #define MAX_NUM_POSITIONS		1000
 
-typedef struct
-{
+/** \brief structures containing normalized sensor readings for the agents easier enterpretation
+ * */
+typedef struct{
 	bool isVisible;
 	double relative_direction;
 	double apsolute_direction;
@@ -16,6 +18,7 @@ typedef struct
 	double x;
 	double y;
 	double t;
+	double compass_direction;
 } PositionSensor;
 
 typedef struct
@@ -28,9 +31,9 @@ typedef struct
 
 typedef struct
 {
-	int front;
-	int left;
-	int right;
+	double front;
+	double left;
+	double right;
 } ObstacleSensor;
 
 typedef struct
@@ -47,12 +50,30 @@ typedef struct
 	int last_position_index;	
 } SensorReadings;
 
-
+/** \brief inititalisation function, must be called before reading sensor data 
+ * */
 void sensors_init();
+
+/** \brief feinitialisation function, call when robot finishes it's activity
+ * */
 void sensors_finish();
 
-void refresh_sensorReadings(int state);
+/** \brief returns SensorReadings structure containing last read sensor data
+ * */
 SensorReadings get_sensorReadings();
+
+/** \brief returns SensorReadings structure containing new read sensor data
+ * \details it refreshes the sensor readings before returning them and depending on the state parameter
+ * it may refres all sensors or a part of them
+ * \param state - determins what sensor readings are going to be refreshed
+ * */
 SensorReadings get_new_sensorReadings(int state);
+
+/** \brief returns SensorBufferReadings structure containing new and filtered sensor data
+ * \details it refreshes the sensor readings before returning them and depending on the state parameter
+ * it may refres all sensors or a part of them
+ * \param state - determins what sensor readings are going to be refreshed
+ * */
+SensorBufferReadings get_new_filteredSensorReadings(int state);
 
 #endif
