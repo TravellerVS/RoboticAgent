@@ -14,6 +14,10 @@ void readObstacleSensors();
 void readOtherSensors();
 void readPositionSensors();
 
+/** \brief calculates the avrage value from the buffer of sensor readings and sotres them in the sensor_filteredSensorReadings
+ * */
+void calculate_filteredSensorReadings();
+
 /** \brief saves the current sensor readings to a buffer array of readings
  * */
 void save_reading_to_buffer();
@@ -26,19 +30,13 @@ void save_breadcrumbs();
 /** \brief returns normalized aproxiate value of the obstacle sensors in cm
  * */
 double normalize_obstacle_sensor(int sensor_reading);
-/** \brief refreshes the internal sensor readings and stores it internally
- * */
-void refresh_sensorReadings(int state);
+
+
+
+void refresh_buffer();
+
 
 SensorReadings sensor_sensorReadings;
-
-
-typedef struct{
-	ObstacleSensor obstacleSensor; ///< analog sensors structure
-	BeaconSensor beaconSensor;
-	PositionSensor positionSensor;
-	int groundSensor;
-} SensorBufferReadings;
 
 SensorBufferReadings sensor_filteredSensorReadings;
 
@@ -56,15 +54,31 @@ void sensors_init(){
 	enableGroundSens();
 	initCompass();
 	sensor_sensorReadings.last_position_index = -1;	
-	internal_values.analog_sensors_updated = false;
+	internal_values.analog_sensors_updated = NO;
 	internal_values.num_readings = 0;
+	refresh_buffer();
 }
+
+SensorReadings get_accurate_sensor_reading(){
+	refresh_buffer();
+	return get_filteredSensorReadings();
+}
+
+void refresh_buffer(){
+	int i;
+	for(i=0; i<READINGS_BUFFER_SIZE;i++){
+		waitTick40ms();
+		refresh_sensorReadings(STATE_DEFAULT);
+	}	
+}
+
 void sensors_finish(){
 	disableObstSens();
 	disableGroundSens();
 }
 
-void refresh_sensorReadings(int state){	
+void refresh_sensorReadings(int state){
+	internal_values.analog_sensors_updated = NO;
 	readPositionSensors();
 	readCompassSensor();
 	readObstacleSensors();
@@ -72,11 +86,16 @@ void refresh_sensorReadings(int state){
 	
 	if(state == STATE_SEARCHING_FOR_BEACON){
 		readBeaconSensor();
-		save_breadcrumbs();
+		//save_breadcrumbs();
 		readGroundSensor();
 		readCompassSensor();
 	}else if(state == STATE_SEARCHING_FOR_BEACON_AREA){
-		save_breadcrumbs();
+		//save_breadcrumbs();
+		readGroundSensor();
+		readCompassSensor();
+	}
+	else if(state == STATE_DEFAULT)
+	{
 		readGroundSensor();
 		readCompassSensor();
 	}
@@ -90,12 +109,18 @@ void refresh_sensorReadings(int state){
 		internal_values.num_readings++;
 	}
 	
+	//print the current readings
 	//double compass = readCompassSensor();
-	//printf("Obst_front=%5.3f, Obst_left=%5.3f, Obst_right=%5.3f compass=%5.3f\n", front, left, right, compass);
 	
-	printf("x=%5.3f, y=%5.3f, \n", sensor_sensorReadings.positionSensor.x, sensor_sensorReadings.positionSensor.y);
-	//~ 
-	//~ printf("Obst_left=%03d, Obst_front=%03d, Obst_right=%03d, Bat_voltage=%03d, Ground_sens=%d, Beacon_visible=%d, Ground_sensors=", 
+	calculate_filteredSensorReadings();
+	//~ printf("\n");
+	//~ printf("  Position: x=%5.3f, y=%5.3f, \n", sensor_sensorReadings.positionSensor.x, sensor_sensorReadings.positionSensor.y);
+	//~ printf("F_Position: x=%5.3f, y=%5.3f, t=%5.3f \n", sensor_filteredSensorReadings.positionSensor.x, sensor_filteredSensorReadings.positionSensor.y, sensor_filteredSensorReadings.positionSensor.t);
+	//~ printf("  ObstSensors : Obst_front=%5.3f, Obst_left=%5.3f, Obst_right=%5.3f \n", sensor_sensorReadings.obstacleSensor.front, sensor_sensorReadings.obstacleSensor.left, sensor_sensorReadings.obstacleSensor.right);
+	printf("F_ObstSensors: front=%5.3f, left=%5.3f, right=%5.3f, \n", sensor_filteredSensorReadings.obstacleSensor.front, sensor_filteredSensorReadings.obstacleSensor.left, sensor_filteredSensorReadings.obstacleSensor.right);
+	
+	
+	//~ printf("Obst_left=%03f, Obst_front=%03f, Obst_right=%03f, Bat_voltage=%03d, Ground_sens=%d, Beacon_visible=%d, Ground_sensors=", 
 	//~ sensor_sensorReadings.obstacleSensor.left, sensor_sensorReadings.obstacleSensor.front, sensor_sensorReadings.obstacleSensor.right, sensor_sensorReadings.batteryVoltage, sensor_sensorReadings.groundSensor,
 					//~ sensor_sensorReadings.beaconSensor.isVisible);
 	//~ printInt(sensor_sensorReadings.groundSensor, 2 | 5 << 16);	// System call
@@ -123,9 +148,14 @@ void readPositionSensors(){
 
 void readObstacleSensors(){
 	check_analog_sensors();
-	sensor_sensorReadings.obstacleSensor.front = normalize_obstacle_sensor(analogSensors.obstSensFront);
-	sensor_sensorReadings.obstacleSensor.left = normalize_obstacle_sensor(analogSensors.obstSensLeft);
-	sensor_sensorReadings.obstacleSensor.right = normalize_obstacle_sensor(analogSensors.obstSensRight);
+	double front_reading = normalize_obstacle_sensor(analogSensors.obstSensFront);
+	double left_reading = normalize_obstacle_sensor(analogSensors.obstSensLeft);
+	double right_reading = normalize_obstacle_sensor(analogSensors.obstSensRight);
+	
+	//if readings are inconclusive the reading should is not taken into cosideration and is assigned the value of the last filtered value
+	sensor_sensorReadings.obstacleSensor.front = ( front_reading > 0 ) ?  front_reading : sensor_filteredSensorReadings.obstacleSensor.front;
+	sensor_sensorReadings.obstacleSensor.left = ( left_reading > 0 ) ?  left_reading : sensor_filteredSensorReadings.obstacleSensor.left;
+	sensor_sensorReadings.obstacleSensor.right = ( right_reading > 0 ) ?  right_reading : sensor_filteredSensorReadings.obstacleSensor.right;
 }
 
 void readOtherSensors(){
@@ -141,10 +171,26 @@ void readCompassSensor(){
 
 double normalize_obstacle_sensor(int sensor_reading){
 	double reading = (double) sensor_reading - 80;
+	double constant = 6200.0;
+	double result_value = 0.0;
+	double result_maximum = 70.0;
+	double result_minimum = 0.0;
 	if(reading<0){
-		reading = 1;
+		//strange reading
+		//usually occurs when obstacle is very far away.
+		result_value = result_maximum;
+	}else{
+		result_value = constant/reading;
 	}
-	double result_value = 6200/reading;
+	//set upper limit because of unreliable readings
+	if(result_value>result_maximum){		
+		result_value = result_maximum;
+	}
+	//set lower limit because of unreliable readings
+	if(result_value<result_minimum){		
+		result_value = result_minimum;
+	}
+	//~ printf("s_reading %d", sensor_reading);
 	return result_value;
 }
 
@@ -221,23 +267,29 @@ void save_breadcrumbs()
 }
 
 void save_reading_to_buffer(){
-	
+	int i;
+	//if bufer is empty
 	if(internal_values.num_readings == 0)
 	{
+		//fill the buffer with the same values, values read from the last reading
 		for(i = READINGS_BUFFER_SIZE-1;i>0;i--){
-			internal_values.sensor_sensorReadings_buffer[i] = sensor_sensorReadings;
+			//~ internal_values.sensor_sensorReadings_buffer[i] = sensor_sensorReadings;
+			internal_values.sensor_sensorReadings_buffer[i].obstacleSensor = sensor_sensorReadings.obstacleSensor;
+			internal_values.sensor_sensorReadings_buffer[i].beaconSensor = sensor_sensorReadings.beaconSensor;
+			internal_values.sensor_sensorReadings_buffer[i].positionSensor = sensor_sensorReadings.positionSensor;
+			internal_values.sensor_sensorReadings_buffer[i].groundSensor = sensor_sensorReadings.groundSensor;
 		}
 	}
-	
-	int i;
+	//move over all the readings by one position
 	for(i = READINGS_BUFFER_SIZE-1;i>0;i--){
 		internal_values.sensor_sensorReadings_buffer[i-1] = internal_values.sensor_sensorReadings_buffer[i];
 	}
-	internal_values.sensor_sensorReadings_buffer[READINGS_BUFFER_SIZE-1] = sensor_sensorReadings;
-	//~ internal_values.sensor_sensorReadings_buffer[READINGS_BUFFER_SIZE-1].obstacleSensor = sensor_sensorReadings.obstacleSensor;
-	//~ internal_values.sensor_sensorReadings_buffer[READINGS_BUFFER_SIZE-1].beaconSensor = sensor_sensorReadings.beaconSensor;
-	//~ internal_values.sensor_sensorReadings_buffer[READINGS_BUFFER_SIZE-1].positionSensor = sensor_sensorReadings.positionSensor;
-	//~ internal_values.sensor_sensorReadings_buffer[READINGS_BUFFER_SIZE-1].groundSensor = sensor_sensorReadings.groundSensor;
+	//put the last reading on the last position
+	//~ internal_values.sensor_sensorReadings_buffer[READINGS_BUFFER_SIZE-1] = sensor_sensorReadings;
+	internal_values.sensor_sensorReadings_buffer[READINGS_BUFFER_SIZE-1].obstacleSensor = sensor_sensorReadings.obstacleSensor;
+	internal_values.sensor_sensorReadings_buffer[READINGS_BUFFER_SIZE-1].beaconSensor = sensor_sensorReadings.beaconSensor;
+	internal_values.sensor_sensorReadings_buffer[READINGS_BUFFER_SIZE-1].positionSensor = sensor_sensorReadings.positionSensor;
+	internal_values.sensor_sensorReadings_buffer[READINGS_BUFFER_SIZE-1].groundSensor = sensor_sensorReadings.groundSensor;
 }
 
 void calculate_filteredSensorReadings(){
@@ -260,8 +312,8 @@ void calculate_filteredSensorReadings(){
 		sensor_filteredSensorReadings.obstacleSensor.right += (double)k * internal_values.sensor_sensorReadings_buffer[i].obstacleSensor.right;
 		sensor_filteredSensorReadings.positionSensor.x += (double)k * internal_values.sensor_sensorReadings_buffer[i].positionSensor.x;
 		sensor_filteredSensorReadings.positionSensor.y += (double)k * internal_values.sensor_sensorReadings_buffer[i].positionSensor.y;
-		sensor_filteredSensorReadings.positionSensor.t += (double)k * internal_values.sensor_sensorReadings_buffer[i].positionSensor.compass_direction;
-		sensor_filteredSensorReadings.positionSensor.compass_direction += (double)k * internal_values.sensor_sensorReadings_buffer[i].obstacleSensor.front;
+		sensor_filteredSensorReadings.positionSensor.t += (double)k * internal_values.sensor_sensorReadings_buffer[i].positionSensor.t;
+		sensor_filteredSensorReadings.positionSensor.compass_direction += (double)k * internal_values.sensor_sensorReadings_buffer[i].positionSensor.compass_direction;
 		sensor_filteredSensorReadings.groundSensor += k * internal_values.sensor_sensorReadings_buffer[i].groundSensor;
 	}
 	sensor_filteredSensorReadings.obstacleSensor.front = sensor_filteredSensorReadings.obstacleSensor.front / (double)sum_k;
@@ -277,14 +329,26 @@ void calculate_filteredSensorReadings(){
 SensorReadings get_sensorReadings(){
 	return sensor_sensorReadings;
 }
+
+SensorReadings get_filteredSensorReadings(){
+	//copy data from sensor readings
+	SensorReadings readings = sensor_sensorReadings;
+	//overwrite buffered data
+	readings.obstacleSensor = sensor_filteredSensorReadings.obstacleSensor;
+	readings.beaconSensor = sensor_filteredSensorReadings.beaconSensor;
+	readings.positionSensor = sensor_filteredSensorReadings.positionSensor;
+	readings.groundSensor = sensor_filteredSensorReadings.groundSensor;
+	return readings;
+}
+
+
 SensorReadings get_new_sensorReadings(int state){
 	refresh_sensorReadings(state);
 	return sensor_sensorReadings;
 }
 
-SensorBufferReadings get_new_filteredSensorReadings(int state){
-	refresh_sensorReadings(state);
-	calculate_filteredSensorReadings();
-	return sensor_filteredSensorReadings;
+SensorReadings get_new_filteredSensorReadings(int state){		
+	refresh_sensorReadings(state);		
+	return get_filteredSensorReadings();
 }
 

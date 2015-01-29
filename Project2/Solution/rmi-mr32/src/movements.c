@@ -1,6 +1,15 @@
+#include <math.h>
 #include "movements.h"
 
 void driveMotors(int speeLeft, int speedRight);
+
+
+typedef struct{
+	double SpeedL;
+	double SpeedR;
+} MovementsInternalValues;
+
+MovementsInternalValues movements_last_values;
 
 void rotateRel_naive(double deltaAngle)
 {
@@ -13,17 +22,17 @@ void rotateRel_naive(double deltaAngle)
 	targetAngle = normalizeAngle(t + deltaAngle);
 	error = normalizeAngle(targetAngle - t);
 	if(error < 0)
-		cmdVel = -30;
+		cmdVel = -SPEED_ROTATE_SLOW;
 	else
-		cmdVel = 30;
-
+		cmdVel = SPEED_ROTATE_SLOW;
+		
 	driveMotors(-cmdVel, cmdVel);
-
-	while (fabs(error) > 0.01 && (error * cmdVel) > 0)
-	{
+	
+	while (fabs(error) > 0.01 && (error * cmdVel) > 0){
+		refresh_sensorReadings(STATE_DEFAULT);
 		getRobotPos(&x, &y, &t);
 		error = normalizeAngle(targetAngle - t);
-	} 
+	}
 	driveMotors(0, 0);
 }
 
@@ -34,8 +43,13 @@ void movement_stop(){
 	driveMotors(0, 0);
 }
 
-void driveMotors(int speeLeft, int speedRight){
-	setVel2(speeLeft, speedRight);
+void driveMotors(int speedLeft, int speedRight){
+	//buffer movement to smooth out the roots movement for the purpous of smaller errors in the position sensors
+	speedLeft = (int)floor((double)(movements_last_values.SpeedL + speedLeft) / 2.0);
+	speedRight = (int)floor((double)(movements_last_values.SpeedR + speedRight) / 2.0);
+	setVel2(speedLeft, speedRight);
+	movements_last_values.SpeedL = speedLeft;
+	movements_last_values.SpeedR = speedRight;
 	//setVel2(0, 0);
 }
 void movement_rotate(int speed, bool direction){

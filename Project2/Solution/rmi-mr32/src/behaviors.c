@@ -3,6 +3,7 @@
 #include "movements.h"
 #include "config_constants.h"
 #include "map.h"
+#include "sensors.h"
 #include "helperFunctions.h"
 
 /** \brief pseudo enumeration of the behaviors
@@ -32,14 +33,20 @@
 #define FOLLOW_WALL_PRIORITY 		3
 #define WOUNDER_PRIORITY 			4
 
-/** \brief pseudo enumeration of the states
- * */
-#define STATE_DEFAULT						0
-#define STATE_INIT							1
-#define STATE_SEARCHING_FOR_BEACON_AREA		2
-#define STATE_RETURNING_HOME				3
-#define STATE_SEARCHING_FOR_BEACON			4 //depricated
+/** \brief list of usefull advanced movement functions that require reading the sensor data
+ * \return they return true if the movement is acomplished and false in case it still needs to be called in the next cycle
+ * \example rotate_to_angle will return false unltil the angle position of the robot is reached (with a small error window)
+ * 			when the angle is reachet the function reurns true indicating that the destination angle is reached
+ * */ 
+bool rotate_to_angle(double targetAngle);
+bool move_to_point(double dest_x, double dest_y);
 
+/** \brief list of behavior functions
+ * \details each behaviour has a test, reset and execution function
+ * 			-the test function returns if the behavior is able to execut acording to the sensor readings and other conditions
+ * 			-the reset function resets the behavior to its initial state, must be called when priority list has changed
+ * 			-the execution function executes the behaviour calling the apropriate movment function to get the apropriate result
+ * */
 bool test_avoid_colision();
 void avoid_colision();
 void reset_avoid_colision();
@@ -102,29 +109,31 @@ int behaviors_state = STATE_INIT;
 double next_point_rel_dir = 0.0;
 int execute_behavior(int behavior_control)
 {
+	//~ printf("behavior BEGIN\n");
 	bool can_execute_list[NUMBER_OF_BEHAVIORS];
-	
-	behavior_sensorReadings = get_new_sensorReadings(behaviors_state);
-	
+	behavior_sensorReadings = get_new_filteredSensorReadings(behaviors_state);
+	//~ behavior_sensorReadings = get_new_sensorReadings(behaviors_state);
+	//~ return 0;
 	can_execute_list[AVOID_COLISION_ID] = test_avoid_colision();
 	
+	//~ printf("behaviors_state = %d  \n",behaviors_state);
+		
 	//debug
-	behaviors_state = STATE_SEARCHING_FOR_BEACON_AREA;
-	
+	//behaviors_state = STATE_SEARCHING_FOR_BEACON_AREA;
 	if(behaviors_state == STATE_RETURNING_HOME){
 		can_execute_list[STOP_AT_STARTING_POINT_ID] = test_stop_at_starting_point();
 		can_execute_list[STOP_AT_BEACON_ID] = false;
 		can_execute_list[LABYRINTH_EXPLORE_ID] = false;
-		can_execute_list[LABYRINTH_RETURN_HOME_ID] = true;
-	//~ }else if(behaviors_state == STATE_INIT){
-		//~ can_execute_list[STOP_AT_STARTING_POINT_ID] = false;
-		//~ can_execute_list[STOP_AT_BEACON_ID] = false;
-		//~ can_execute_list[LABYRINTH_EXPLORE_ID] = false;
-		//~ can_execute_list[LABYRINTH_RETURN_HOME_ID] = false;
+		can_execute_list[LABYRINTH_RETURN_HOME_ID] = test_labyrinth_return_home();
+	}else if(behaviors_state == STATE_INIT){
+		can_execute_list[STOP_AT_STARTING_POINT_ID] = false;
+		can_execute_list[STOP_AT_BEACON_ID] = false;
+		can_execute_list[LABYRINTH_EXPLORE_ID] = false;
+		can_execute_list[LABYRINTH_RETURN_HOME_ID] = false;
 	}else if(behaviors_state == STATE_SEARCHING_FOR_BEACON_AREA){
 		can_execute_list[STOP_AT_STARTING_POINT_ID] = false;
 		can_execute_list[STOP_AT_BEACON_ID] = false; //test_stop_at_starting_point();
-		can_execute_list[LABYRINTH_EXPLORE_ID] = true;
+		can_execute_list[LABYRINTH_EXPLORE_ID] = test_labyrinth_explore(); //true
 		can_execute_list[LABYRINTH_RETURN_HOME_ID] = false;
 	}else{
 		signal_ERROR();
@@ -133,6 +142,7 @@ int execute_behavior(int behavior_control)
 	 * changing the priority list of the behaviors
 	 * */
 	int priority;
+	
 	for(priority=0;priority<NUMBER_OF_BEHAVIORS;priority++){
 		if(can_execute_list[behavior_struct.priority_list[priority]] == true){
 			leds(behavior_struct.priority_list[priority]);
@@ -167,9 +177,13 @@ int execute_behavior(int behavior_control)
 					break;
 				default:
 					signal_ERROR();
+					printf("ERROR - no state can execute \n");
 					break;
 			}
 			break;
+		}
+		else{
+			printf("behaviour (id=%d, priority=%d) cannot execute \n",behavior_struct.priority_list[priority], priority);
 		}
 	}
 	return 0;
@@ -180,6 +194,8 @@ void reset_avoid_colision(){
 	beh_av_col.isActive = false;	
 }
 bool test_avoid_colision(){
+	//debug
+	return false;
 	if(behavior_sensorReadings.obstacleSensor.front <= DISTANCE_COLISION_FRONT 
 	|| behavior_sensorReadings.obstacleSensor.right <= DISTANCE_COLISION_SIDES
 	|| behavior_sensorReadings.obstacleSensor.left  <= DISTANCE_COLISION_SIDES)
@@ -199,21 +215,51 @@ void avoid_colision(){
 	movement_rotate(SPEED_ROTATE, beh_av_col.direction);
 }
 
-
 bool move_to_point(double dest_x, double dest_y)
 {
 	double distance = distance_between_points(behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, dest_x, dest_y);
-	bool result = false;
-	if(distance<=DISTANCE_XY_CLOSE){
-		movement_stop();
-		result = true;
+	bool result = (distance<=DISTANCE_XY_CLOSE) ? true : false;
+	if(result){
+		//~ printf(" stop \n");	
+		//~ movement_stop();
+		wait(1);
 	}else{
-		double rel_angle = angle_between_points(behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, dest_x, dest_y);
-		if(fabs(rel_angle)>M_PI/12){
-			rotateRel_naive(rel_angle);
-		}else{
-			movement_go_forward(SPEED_MEDIUM);
-		}			
+		
+		double absolute_angle = angle_between_points(behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, dest_x, dest_y);
+		
+		if(rotate_to_angle(absolute_angle) == true){
+			//buffered movement -> it slows down if when it's close to the target
+			//~ printf(" forward ");
+			double speed = distance*0.5;
+			if(speed>SPEED_MEDIUM){
+				speed=SPEED_MEDIUM;
+			}
+			movement_go_forward(speed);
+			//~ printf(" forward %5.3f\n", speed);
+		}		
+	}
+	return result;
+}
+
+bool rotate_to_angle(double targetAngle){
+	double tolerance = (2*M_PI)/36;
+	double angleDifference = angle_difference(behavior_sensorReadings.positionSensor.t,targetAngle);
+	bool result = (fabs(angleDifference) < tolerance) ? true : false;
+	if(result==true){
+		//~ movement_stop();
+	}
+	else
+	{
+		printf("rotate, angleDifference=%5.3f , targetAngle=%5.3f \n",angleDifference,targetAngle);
+		bool direction = (angleDifference < 0) ? RIGHT : LEFT ;
+		
+		double speed = fabs(angleDifference*20.0);
+		if(speed<SPEED_ROTATE_BEFORE_STOP){
+			speed=SPEED_ROTATE_BEFORE_STOP;
+		}else if(speed>SPEED_ROTATE){
+			speed=SPEED_ROTATE;
+		}	
+		movement_rotate(speed, direction);
 	}
 	return result;
 }
@@ -221,98 +267,186 @@ bool move_to_point(double dest_x, double dest_y)
 typedef struct{
 	PositionXY destination;
 	int state;
-	int direction;
+	int next_direction;
 	Behavior_generic_vals generic;
-	MapField next_field;
+	MapField *next_field;
 } Behavior_labyrinth_explore_vals;
 Behavior_labyrinth_explore_vals beh_labyrinth_explore;
+
+#define LAB_BEH_STATE_MOVE_TO_NEXT_POINT 	0
+#define LAB_BEH_FIND_NEXT_UNDEF_FIELD 		1
+#define LAB_BEH_MAP_FIELD_AND_DECIDE 		2
 
 bool test_labyrinth_explore(){
 	return true;
 }
+
+/*
+ * WARNING: function has multiple exit poits.
+ * */
 void labyrinth_explore(){
-	printf("labyrinth_explore \n");	
-	
-	if(beh_labyrinth_explore.state == 0)
+	printf("LABYRINTH_EXPLORE STATE=%d \n", beh_labyrinth_explore.state);
+	//debug
+	//~ beh_labyrinth_explore.state = 0;
+	if(beh_labyrinth_explore.state == LAB_BEH_STATE_MOVE_TO_NEXT_POINT)
 	{
+		//~ printf("move to next point \n");
+		printf("move_to_point values: x=%f, y=%f, t=%f, destx=%f, desty=%f \n",behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, behavior_sensorReadings.positionSensor.t, (*beh_labyrinth_explore.next_field).position.x, (*beh_labyrinth_explore.next_field).position.y);
 		//move to next point
-		if(move_to_point(beh_labyrinth_explore.next_field.position.x,beh_labyrinth_explore.next_field.position.y)){
-			beh_labyrinth_explore.state++;
-			set_CurrentField(&next_field);
-			labyrinth_explore();
+		if(move_to_point((*beh_labyrinth_explore.next_field).position.x,(*beh_labyrinth_explore.next_field).position.y)){
+			movement_stop();
+			beh_labyrinth_explore.state = LAB_BEH_FIND_NEXT_UNDEF_FIELD;
+			set_CurrentField(beh_labyrinth_explore.next_field);
+			printf("FINISHED \n");
 		}
 	}
-	else if(beh_labyrinth_explore.state == 2)
+	else if(beh_labyrinth_explore.state == LAB_BEH_FIND_NEXT_UNDEF_FIELD)
 	{
+		movement_stop();
+		printf("find next undefined state \n");
 		//find next undefined state
 		int next_field_state = MAP_STATE_UNDEFINED;
 		int i = 0;
 		for( i=0; i<MAP_FIELD_NUM_CONNECTIONS; i++)
 		{
+			printf("for i = %d ", i);
 			next_field_state = (*currentField).connections[i].state;
+			//~ next_field_state = (*currentField).connections[i];
+			printf("state = %d ", next_field_state);
 			if(next_field_state == MAP_STATE_UNDEFINED){
+				printf("next_field_state is undefined \n");
+				beh_labyrinth_explore.state = LAB_BEH_MAP_FIELD_AND_DECIDE;
+				beh_labyrinth_explore.next_direction = i;
 				break;
 			}
+			else{
+				//printf("next_field_state is undefined \n");
+				//~ MapField tempMapField = *(*currentField).connections[i].field;
+				//~ printf("\n !!!!!!!!!!!neighbour: %d, X=%5.3f, Y=%5.3f --  MY Position: X=%5.3f, Y=%5.3f --  Current: %d, X=%5.3f, Y=%5.3f\n", (*currentField).connections[i].field, tempMapField.position.x, tempMapField.position.y, behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, currentField, (*currentField).position.x, (*currentField).position.y );
+			}
 		}
-		if(next_field_state == MAP_STATE_UNDEFINED)
-		{
-			//roate to next undefined neighbour
-			double angel = i*((2*M_PI)/MAP_FIELD_NUM_CONNECTIONS);
-			angel = angle_difference(behavior_sensorReadings.positionSensor.t, angel);
-			rotateRel_naive(angel);
-			beh_labyrinth_explore.state++;
-			beh_labyrinth_explore.direction = i;
+		if(next_field_state != MAP_STATE_UNDEFINED){
+			printf("find next free destination \n");
+			//todo calculate best next destination		
+			for( i=0; i<MAP_FIELD_NUM_CONNECTIONS; i++)
+			{
+				printf("for i = %d ", i);
+				next_field_state = (*currentField).connections[i].state;
+				//~ next_field_state = (*currentField).connections[i];
+				printf("state = %d ", next_field_state);
+				if(next_field_state == MAP_STATE_FREE)
+				{
+					printf("\n\n\n###############  GOING TO FRIEND  #################\n\n\n");
+					beh_labyrinth_explore.next_field = (*currentField).connections[i].field;
+					beh_labyrinth_explore.state = LAB_BEH_STATE_MOVE_TO_NEXT_POINT;
+					break;
+				}
+			}
+			if(next_field_state != MAP_STATE_FREE){
+				signal_ERROR();	//no neghbours are free
+			}
+		}				
+		//beh_labyrinth_explore.state = LAB_BEH_STATE_MOVE_TO_NEXT_POINT;
+	}
+	else if(beh_labyrinth_explore.state == LAB_BEH_MAP_FIELD_AND_DECIDE)
+	{
+		//rotate to next undefined neighbour
+		double angel = beh_labyrinth_explore.next_direction*((2.0*M_PI)/(double)MAP_FIELD_NUM_CONNECTIONS);
+		//angel = angle_difference(behavior_sensorReadings.positionSensor.t, angel);
+		if(rotate_to_angle(angel)==true){
+			movement_stop();
+			printf("calculate position and distance \n");
+			//get more accurate reeadings to decide more accuratly
+			behavior_sensorReadings = get_accurate_sensor_reading();
+			//calculate position and distance
+			double distance = DISTANCE_BETWEEN_POINTS;
+			PositionXY neighbour_position;
+			new_points_from_distance_and_angle(behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, &neighbour_position.x, &neighbour_position.y, behavior_sensorReadings.positionSensor.t, distance);
+			//calculate state
+			int neighbour_state = (
+											behavior_sensorReadings.obstacleSensor.front >= DISTANCE_NEAR_FRONT
+										&& behavior_sensorReadings.obstacleSensor.left >= DISTANCE_CLOSE_SIDES
+										&& behavior_sensorReadings.obstacleSensor.right >= DISTANCE_CLOSE_SIDES
+									) ? MAP_STATE_FREE : MAP_STATE_OCCUPIED;
+			MapField *neighbour_field;
+			
+			printf("BEHAVIOR: currentField=%d ,  startingField=%d\n", currentField, startingField);
+			
+			neighbour_field = add_field(currentField, beh_labyrinth_explore.next_direction, neighbour_state, neighbour_state, neighbour_position);
+			if(neighbour_state == MAP_STATE_FREE)
+			{
+				printf("go to neighbour \n");
+				//go to neighbour
+				beh_labyrinth_explore.next_field = neighbour_field;
+				beh_labyrinth_explore.state = LAB_BEH_STATE_MOVE_TO_NEXT_POINT;
+			}
+			else
+			{
+				printf("field not free \n");
+				printf("f=%5.3f ,l=%5.3f ,r=%5.3f \n", behavior_sensorReadings.obstacleSensor.front, behavior_sensorReadings.obstacleSensor.left ,behavior_sensorReadings.obstacleSensor.right);
+				beh_labyrinth_explore.state = LAB_BEH_FIND_NEXT_UNDEF_FIELD;
+				//~ printf("field not free \n");
+				//~ //rotate to next neighbour
+				//~ rotateRel_naive((2*M_PI)/MAP_FIELD_NUM_CONNECTIONS);
+				//~ beh_labyrinth_explore.next_direction++;
+				//~ beh_labyrinth_explore.next_direction = beh_labyrinth_explore.next_direction%MAP_FIELD_NUM_CONNECTIONS;
+			}
 		}
 		else
 		{
-			//todo calculate best next destination
-			beh_labyrinth_explore.state = 0;
+			printf("rotating to next undefined neighbour destination=%d, angle=%f, t=%f\n",beh_labyrinth_explore.next_direction,angel,behavior_sensorReadings.positionSensor.t);
 		}		
 	}
-	else if(beh_labyrinth_explore.state == 3)
-	{
-		//calculate position and distance
-		double distance = 20.0;
-		PositionXY neighbour_position;
-		new_points_from_distance_and_angle(behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, &neighbour_position.x, &neighbour_position.y, behavior_sensorReadings.positionSensor.t, distace);
-		//calculate state
-		int neighbour_state = (behavior_sensorReadings.obstacleSensor.front >= 40.0) ? MAP_STATE_FREE : MAP_STATE_OCCUPIED;
-		MapField neighbour_field;
-		&neighbour_field = add_field(currentField, beh_labyrinth_explore.direction, neighbour_state, neighbour_state, neighbour_position);
-		if(neighbour_state == MAP_STATE_FREE)
-		{
-			//go to neighbour
-			beh_labyrinth_explore.next_field = neighbour_field;
-			beh_labyrinth_explore.state = 0;
-		}
-		else
-		{
-			beh_labyrinth_explore.state = 2;
-			//~ //rotate to next neighbour
-			//~ rotateRel_naive((2*M_PI)/MAP_FIELD_NUM_CONNECTIONS);
-			//~ beh_labyrinth_explore.direction++;
-			//~ beh_labyrinth_explore.direction = beh_labyrinth_explore.direction%MAP_FIELD_NUM_CONNECTIONS;
-		}
-		labyrinth_explore();	
-	}
-	//1 - calculate destination
-	//3 - rotate towards destination
-	//2 - move to destination
-	//4 - rotate to correct position
+	//~ printf("End of function \n");
+	return;
 }
+
 void reset_labyrinth_explore(){
-	beh_labyrinth_explore.direction = 0;
+	beh_labyrinth_explore.next_direction = 0;
 	beh_labyrinth_explore.generic.isActive = false;
-	beh_labyrinth_explore.state = 0;
+	beh_labyrinth_explore.state = LAB_BEH_STATE_MOVE_TO_NEXT_POINT;
+	beh_labyrinth_explore.next_field = currentField;
 	//~ beh_labyrinth_explore.destination.x = 200.0;
 	//~ beh_labyrinth_explore.destination.y = 200.0;
 }
+
+
+
+typedef struct{
+	int current_field_index;
+	MapField *path[MAX_MAP_FIELDS];
+	int end_field_index;
+} Behavior_fillow_path_vals;
+Behavior_fillow_path_vals Behavior_fillow_path;
+
+void reset_follow_path(){
+	Behavior_fillow_path.current_field_index = 0;
+	*Behavior_fillow_path.path = NULL;
+	//test
+	get_path_to_nearest_unexplored_field(Behavior_fillow_path.path, &Behavior_fillow_path.end_field_index);
+}
+
+bool test_follow_path(){
+	bool result = false;
+	//if path is set and the robot has not yet reached the destination return true
+	//else return false	
+	if(*Behavior_fillow_path.path != NULL && Behavior_fillow_path.current_field_index < Behavior_fillow_path.end_field_index){
+		result = true;
+	}else{
+		result = false;
+	}
+	return result;
+}
+void follow_path(){
+	
+}
+
 
 bool test_labyrinth_return_home(){
 	return true;
 }
 void labyrinth_return_home(){
-	
+	printf("LABYRINTH_RETURN_HOME \n");
 }
 void reset_labyrinth_return();
 
@@ -416,6 +550,7 @@ void reset_default_priority_list()
 	int priority;
 	for(priority=0; priority<NUMBER_OF_BEHAVIORS; priority++){
 		behavior_struct.priority_list[priority] = behavior_struct.default_priority_list[priority];
+		//~ printf("reset priority=%d ID=%d \n",priority, behavior_struct.priority_list[priority] );
 	}
 }
 
@@ -434,10 +569,19 @@ void set_return_priority_list()
 }
 
 void behaviors_init(){
+	SensorReadings tempSensorReadings = get_filteredSensorReadings();
+	PositionXY position;
+	position.x = tempSensorReadings.startingPosition.x;
+	position.y = tempSensorReadings.startingPosition.y;
+	//~ position.x = 0.0;
+	//~ position.y = 0.0;
+	map_init(position);
+	
+	movement_stop();
 	behaviors_state = STATE_SEARCHING_FOR_BEACON_AREA;
-	behavior_struct.default_priority_list[STOP_AT_BEACON_PRIORITY] = STOP_AT_BEACON_ID;
-	behavior_struct.default_priority_list[AVOID_COLISION_PRIORITY] = AVOID_COLISION_ID;
-	behavior_struct.default_priority_list[LABYRINTH_EXPLORE_ID] = LABYRINTH_EXPLORE_ID;
+	behavior_struct.default_priority_list[0] = STOP_AT_BEACON_ID;
+	behavior_struct.default_priority_list[1] = AVOID_COLISION_ID;
+	behavior_struct.default_priority_list[2] = LABYRINTH_EXPLORE_ID;
 	
 	reset_default_priority_list();
 	reset_labyrinth_explore();
@@ -468,6 +612,7 @@ void signal_short_LED(){
 	leds(0);
 }
 void signal_ERROR(){
+	printf("WARNING: An ERROR occured!! \n");	
 	movement_stop();
 	while(1){
 		leds(9);
@@ -480,10 +625,15 @@ void signal_ERROR(){
 
 
 
-/**
- * DEPRICATED PART - old code
- * */
-
+/*
+ * ########################################################################################################################################################################
+ * ########################################################################################################################################################################
+ * ########################################################################################################################################################################
+ * ##################################--------DEPRICATED PART - old code, old behaviors--------#############################################################################
+ * ########################################################################################################################################################################
+ * ########################################################################################################################################################################
+ * ########################################################################################################################################################################
+ */
 
 bool test_follow_wall();
 void follow_wall();
@@ -492,228 +642,211 @@ void reset_follow_wall();
 bool test_follow_beacon();
 void follow_beacon();
 void reset_follow_beacon();
+//~ 
 
 
-
+int follow_starting_point_last_point;
+void reset_follow_starting_point(){
+	follow_starting_point_last_point = behavior_sensorReadings.last_position_index;
+}
+bool test_follow_starting_point(){
+	return true;
+}
+void follow_starting_point(){	
+	//follow_starting_point_last_point = 0;
+	double dest_x;
+	double dest_y;
+	if(follow_starting_point_last_point<=0)
+	{
+		dest_x = behavior_sensorReadings.startingPosition.x;
+		dest_y = behavior_sensorReadings.startingPosition.y;
+		follow_starting_point_last_point= 0;
+	}
+	else
+	{
+		dest_x = behavior_sensorReadings.positionsHistory[follow_starting_point_last_point].x;
+		dest_y = behavior_sensorReadings.positionsHistory[follow_starting_point_last_point].y;	
+	}
+	double dx = behavior_sensorReadings.positionSensor.x - dest_x;
+	double dy = behavior_sensorReadings.positionSensor.y - dest_y;
+	double dz = sqrt(dx*dx+dy*dy);
+	int i=0;
+	for(i= follow_starting_point_last_point-1;i>0; i--)
+	{
+		double tdx = dest_x - behavior_sensorReadings.positionsHistory[i].x;
+		double tdy = dest_x - behavior_sensorReadings.positionsHistory[i].y;
+		double tdz = sqrt(tdx*tdx+tdy*tdy);
+		if(tdz<OTHER_POINT_BUFFER){
+			follow_starting_point_last_point = i;
+			follow_starting_point();
+			return;
+		}		
+	}
+	
+	if(dz<=OTHER_POINT_BUFFER && follow_starting_point_last_point!=0){
+		follow_starting_point_last_point--;
+		follow_starting_point();
+		return;
+	}
+	
+	double relative_direction = atan2(dy, dx) - behavior_sensorReadings.positionSensor.t;
+	relative_direction = (relative_direction>M_PI) ? relative_direction-2*M_PI : relative_direction;
+	relative_direction = (relative_direction<-M_PI) ? relative_direction+2*M_PI : relative_direction;	
+	next_point_rel_dir=relative_direction;
+	printf("follow_starting_point_last_point =%d, x=%5.3f, y=%5.3f, t=%5.3f, relAngle=%5.3f , startX=%5.3f, startY=%5.3f \n",
+		follow_starting_point_last_point,
+		behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, behavior_sensorReadings.positionSensor.t, 
+		relative_direction, 
+		dest_x, dest_y );
+	
+	//printf("FOLLOW_STARTING_POINT \n");
+	if(fabs(relative_direction) > (M_PI/6))//30 degrees
+	{
+		printf("ROTATE \n");
+		//rotateRel_naive(relative_direction);
+		bool direction = (relative_direction > 0) ? RIGHT : LEFT;
+		movement_travel_in_curve_radius_direction(SPEED_MEDIUM, TURN_RADIUS_SMALL, direction);
+	}
+	else
+	{
+		printf("FORWARD \n");
+		movement_go_forward(SPEED_MEDIUM);
+	}
+}
 //~ 
 //~ 
-//~ int follow_starting_point_last_point;
-//~ void reset_follow_starting_point(){
-	//~ follow_starting_point_last_point = behavior_sensorReadings.last_position_index;
-//~ }
-//~ bool test_follow_starting_point(){
-	//~ return true;
-//~ }
-//~ void follow_starting_point(){	
-	//~ //follow_starting_point_last_point = 0;
-	//~ double dest_x;
-	//~ double dest_y;
-	//~ if(follow_starting_point_last_point<=0)
-	//~ {
-		//~ dest_x = behavior_sensorReadings.startingPosition.x;
-		//~ dest_y = behavior_sensorReadings.startingPosition.y;
-		//~ follow_starting_point_last_point= 0;
-	//~ }
-	//~ else
-	//~ {
-		//~ dest_x = behavior_sensorReadings.positionsHistory[follow_starting_point_last_point].x;
-		//~ dest_y = behavior_sensorReadings.positionsHistory[follow_starting_point_last_point].y;	
-	//~ }
-	//~ double dx = behavior_sensorReadings.positionSensor.x - dest_x;
-	//~ double dy = behavior_sensorReadings.positionSensor.y - dest_y;
-	//~ double dz = sqrt(dx*dx+dy*dy);
-	//~ int i=0;
-	//~ for(i= follow_starting_point_last_point-1;i>0; i--)
-	//~ {
-		//~ double tdx = dest_x - behavior_sensorReadings.positionsHistory[i].x;
-		//~ double tdy = dest_x - behavior_sensorReadings.positionsHistory[i].y;
-		//~ double tdz = sqrt(tdx*tdx+tdy*tdy);
-		//~ if(tdz<OTHER_POINT_BUFFER){
-			//~ follow_starting_point_last_point = i;
-			//~ follow_starting_point();
-			//~ return;
-		//~ }		
-	//~ }
-	//~ 
-	//~ if(dz<=OTHER_POINT_BUFFER && follow_starting_point_last_point!=0){
-		//~ follow_starting_point_last_point--;
-		//~ follow_starting_point();
-		//~ return;
-	//~ }
-	//~ 
-	//~ double relative_direction = atan2(dy, dx) - behavior_sensorReadings.positionSensor.t;
-	//~ relative_direction = (relative_direction>M_PI) ? relative_direction-2*M_PI : relative_direction;
-	//~ relative_direction = (relative_direction<-M_PI) ? relative_direction+2*M_PI : relative_direction;	
-	//~ next_point_rel_dir=relative_direction;
-	//~ printf("follow_starting_point_last_point =%d, x=%5.3f, y=%5.3f, t=%5.3f, relAngle=%5.3f , startX=%5.3f, startY=%5.3f \n",
-		//~ follow_starting_point_last_point,
-		//~ behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, behavior_sensorReadings.positionSensor.t, 
-		//~ relative_direction, 
-		//~ dest_x, dest_y );
-	//~ 
-	//~ //printf("FOLLOW_STARTING_POINT \n");
-	//~ if(fabs(relative_direction) > (M_PI/6))//30 degrees
-	//~ {
-		//~ printf("ROTATE \n");
-		//~ //rotateRel_naive(relative_direction);
-		//~ bool direction = (relative_direction > 0) ? RIGHT : LEFT;
-		//~ movement_travel_in_curve_radius_direction(SPEED_MEDIUM, TURN_RADIUS_SMALL, direction);
-	//~ }
-	//~ else
-	//~ {
-		//~ printf("FORWARD \n");
-		//~ movement_go_forward(SPEED_MEDIUM);
-	//~ }
-//~ }
 
 
+typedef struct
+{
+	Behavior_generic_vals turningVals;
+	bool wall_side;
+	bool isActive;
+	int state;
+	double wallAngle;
+	bool wallAngleSet;
+	int curveCounter;
+} Behavior_follow_wall_vals;
+Behavior_follow_wall_vals beh_fol_wall;
+void reset_follow_wall(){
+	beh_fol_wall.isActive = false;
+	beh_fol_wall.isActive = false;
+	beh_fol_wall.turningVals.isActive = false;
+	beh_fol_wall.state = 0;
+	beh_fol_wall.wallAngle = 0.0;
+	beh_fol_wall.wallAngleSet = false;
+	beh_fol_wall.curveCounter = 0;
+}
+bool test_follow_wall(){
+	if(behavior_sensorReadings.obstacleSensor.front >= DISTANCE_FOLLOW_WALL_FRONT 
+	|| behavior_sensorReadings.obstacleSensor.right >= DISTANCE_FOLLOW_WALL_SIDES
+	|| behavior_sensorReadings.obstacleSensor.left  >= DISTANCE_FOLLOW_WALL_SIDES
+	|| beh_fol_wall.isActive == true )
+	{
+		return true;
+	}
+	return false;
+}
+void follow_wall(){
+	printf("FOLLOW_WALL \n");
+	if(beh_fol_wall.isActive == false)
+	{
+		beh_fol_wall.wall_side = (behavior_sensorReadings.obstacleSensor.right > behavior_sensorReadings.obstacleSensor.left) ? RIGHT : LEFT;
+		beh_fol_wall.isActive = true;
+	}
+	//beh_fol_wall.wall_side = (behavior_sensorReadings.obstacleSensor.right > behavior_sensorReadings.obstacleSensor.left) ? RIGHT : LEFT;
+		
+	//printf("beh_fol_wall.isActive=%d, beh_fol_wall.wall_side=%d", beh_fol_wall.isActive, beh_fol_wall.wall_side);
+	//printf("\n");	
+	
+	int distance_sensor_value = (beh_fol_wall.wall_side == RIGHT) ? behavior_sensorReadings.obstacleSensor.right : behavior_sensorReadings.obstacleSensor.left ;
+	//printf("distance_sensor_value = %03d",distance_sensor_value);
+	//printf("\n");	
+	
+	//printf("front=%d, distance_sensor_value=%d", behavior_sensorReadings.obstacleSensor.front,distance_sensor_value);
+	//printf("\n");
+	if(behavior_sensorReadings.obstacleSensor.front >= DISTANCE_FOLLOW_WALL_FRONT /*&& distance_sensor_value >= DISTANCE_COLISION_SIDES*/)
+	{			
+		beh_fol_wall.turningVals.direction = !beh_fol_wall.wall_side;
+		beh_fol_wall.turningVals.isActive = true;
+		//printf("WALL in front");
+		//printf("\n");
+		movement_rotate(SPEED_ROTATE, beh_fol_wall.turningVals.direction);
+		return;
+	}
+	
+	if(beh_fol_wall.state!=2 && beh_fol_wall.wallAngleSet)
+	{
+		beh_fol_wall.curveCounter = 0;
+	}
+	
+	if(distance_sensor_value >= DISTANCE_FOLLOW_WALL_IDEAL_MAX && distance_sensor_value <= DISTANCE_FOLLOW_WALL_IDEAL_MIN)
+	{
+		beh_fol_wall.state=1;
+		beh_fol_wall.wallAngleSet = true;
+		beh_fol_wall.wallAngle=behavior_sensorReadings.positionSensor.t;
+		movement_go_forward(SPEED_FOLLOW_WALL);		
+	}
+	else
+	{		
+		if(distance_sensor_value >= DISTANCE_FOLLOW_WALL_IDEAL_MIN)
+		{
+			beh_fol_wall.wallAngleSet = false;
+			beh_fol_wall.state=0;
+			//printf("TURN_RADIUS_SMALL  ------beh_fol_wall.wall_side\n");
+			movement_travel_in_curve_radius_direction(SPEED_FOLLOW_WALL, TURN_RADIUS_SMALL, !beh_fol_wall.wall_side);
+		}
+		else
+		{
+			if(beh_fol_wall.state!=2 && beh_fol_wall.wallAngleSet)
+			{
+				beh_fol_wall.state=2;
+				double angle = (beh_fol_wall.wall_side == RIGHT) ? (beh_fol_wall.wallAngle+M_PI/8) : (beh_fol_wall.wallAngle-M_PI/8);
+				beh_fol_wall.wallAngleSet = false;				
+				angle = angle - behavior_sensorReadings.positionSensor.t;
+				rotateRel_naive(angle);
+			}
+			beh_fol_wall.curveCounter++;
+			if(beh_fol_wall.curveCounter>=200)
+			{
+				reset_follow_wall();
+			}
+			//printf("TURN_RADIUS_MEDIUM  ++++++beh_fol_wall.wall_side\n");
+			movement_travel_in_curve_radius_direction(SPEED_FOLLOW_WALL, TURN_RADIUS_GO_ROUND_CORNER, beh_fol_wall.wall_side);
+			//todo malo poboljšati ovo			
+		}
+	}
+	//printf("\n");
+}
+void reset_follow_beacon(){
+	
+}
+bool test_follow_beacon(){
+	if(behavior_sensorReadings.beaconSensor.isVisible == true)
+	{
+		return true;
+	}
+	return false;
+}
+void follow_beacon(){
+	printf("FOLLOW_BEACON \n");
+	if(fabs(behavior_sensorReadings.beaconSensor.relative_direction) > (M_PI/6))//30 degrees
+	{
+		bool direction = (behavior_sensorReadings.beaconSensor.relative_direction > 0) ? RIGHT : LEFT;
+		movement_travel_in_curve_radius_direction(SPEED_MEDIUM, TURN_RADIUS_SMALL, direction);
+		//rotateRel_naive(behavior_sensorReadings.beaconSensor.relative_direction);
+	}
+	else
+	{
+		movement_go_forward(SPEED_MEDIUM);
+	}
+}
 
 
+/**
+ * DEPRICATED FUNCTION - new one replaced this one for the purpouse of the PathFinder Final Project for the "Inteligent and mobile robotics" course 2014./2015. 
+ * */
 
-
-
-
-
-
-
-
-//~ 
-//~ 
-//~ typedef struct
-//~ {
-	//~ Behavior_generic_vals turningVals;
-	//~ bool wall_side;
-	//~ bool isActive;
-	//~ int state;
-	//~ double wallAngle;
-	//~ bool wallAngleSet;
-	//~ int curveCounter;
-//~ } Behavior_follow_wall_vals;
-//~ Behavior_follow_wall_vals beh_fol_wall;
-//~ void reset_follow_wall(){
-	//~ beh_fol_wall.isActive = false;
-	//~ beh_fol_wall.isActive = false;
-	//~ beh_fol_wall.turningVals.isActive = false;
-	//~ beh_fol_wall.state = 0;
-	//~ beh_fol_wall.wallAngle = 0.0;
-	//~ beh_fol_wall.wallAngleSet = false;
-	//~ beh_fol_wall.curveCounter = 0;
-//~ }
-//~ bool test_follow_wall(){
-	//~ if(behavior_sensorReadings.obstacleSensor.front >= DISTANCE_FOLLOW_WALL_FRONT 
-	//~ || behavior_sensorReadings.obstacleSensor.right >= DISTANCE_FOLLOW_WALL_SIDES
-	//~ || behavior_sensorReadings.obstacleSensor.left  >= DISTANCE_FOLLOW_WALL_SIDES
-	//~ || beh_fol_wall.isActive == true )
-	//~ {
-		//~ return true;
-	//~ }
-	//~ return false;
-//~ }
-//~ void follow_wall(){
-	//~ printf("FOLLOW_WALL \n");
-	//~ if(beh_fol_wall.isActive == false)
-	//~ {
-		//~ beh_fol_wall.wall_side = (behavior_sensorReadings.obstacleSensor.right > behavior_sensorReadings.obstacleSensor.left) ? RIGHT : LEFT;
-		//~ beh_fol_wall.isActive = true;
-	//~ }
-	//~ //beh_fol_wall.wall_side = (behavior_sensorReadings.obstacleSensor.right > behavior_sensorReadings.obstacleSensor.left) ? RIGHT : LEFT;
-		//~ 
-	//~ //printf("beh_fol_wall.isActive=%d, beh_fol_wall.wall_side=%d", beh_fol_wall.isActive, beh_fol_wall.wall_side);
-	//~ //printf("\n");	
-	//~ 
-	//~ int distance_sensor_value = (beh_fol_wall.wall_side == RIGHT) ? behavior_sensorReadings.obstacleSensor.right : behavior_sensorReadings.obstacleSensor.left ;
-	//~ //printf("distance_sensor_value = %03d",distance_sensor_value);
-	//~ //printf("\n");	
-	//~ 
-	//~ //printf("front=%d, distance_sensor_value=%d", behavior_sensorReadings.obstacleSensor.front,distance_sensor_value);
-	//~ //printf("\n");
-	//~ if(behavior_sensorReadings.obstacleSensor.front >= DISTANCE_FOLLOW_WALL_FRONT /*&& distance_sensor_value >= DISTANCE_COLISION_SIDES*/)
-	//~ {			
-		//~ beh_fol_wall.turningVals.direction = !beh_fol_wall.wall_side;
-		//~ beh_fol_wall.turningVals.isActive = true;
-		//~ //printf("WALL in front");
-		//~ //printf("\n");
-		//~ movement_rotate(SPEED_ROTATE, beh_fol_wall.turningVals.direction);
-		//~ return;
-	//~ }
-	//~ 
-	//~ if(beh_fol_wall.state!=2 && beh_fol_wall.wallAngleSet)
-	//~ {
-		//~ beh_fol_wall.curveCounter = 0;
-	//~ }
-	//~ 
-	//~ if(distance_sensor_value >= DISTANCE_FOLLOW_WALL_IDEAL_MAX && distance_sensor_value <= DISTANCE_FOLLOW_WALL_IDEAL_MIN)
-	//~ {
-		//~ beh_fol_wall.state=1;
-		//~ beh_fol_wall.wallAngleSet = true;
-		//~ beh_fol_wall.wallAngle=behavior_sensorReadings.positionSensor.t;
-		//~ movement_go_forward(SPEED_FOLLOW_WALL);		
-	//~ }
-	//~ else
-	//~ {		
-		//~ if(distance_sensor_value >= DISTANCE_FOLLOW_WALL_IDEAL_MIN)
-		//~ {
-			//~ beh_fol_wall.wallAngleSet = false;
-			//~ beh_fol_wall.state=0;
-			//~ //printf("TURN_RADIUS_SMALL  ------beh_fol_wall.wall_side\n");
-			//~ movement_travel_in_curve_radius_direction(SPEED_FOLLOW_WALL, TURN_RADIUS_SMALL, !beh_fol_wall.wall_side);
-		//~ }
-		//~ else
-		//~ {
-			//~ if(beh_fol_wall.state!=2 && beh_fol_wall.wallAngleSet)
-			//~ {
-				//~ beh_fol_wall.state=2;
-				//~ double angle = (beh_fol_wall.wall_side == RIGHT) ? (beh_fol_wall.wallAngle+M_PI/8) : (beh_fol_wall.wallAngle-M_PI/8);
-				//~ beh_fol_wall.wallAngleSet = false;				
-				//~ angle = angle - behavior_sensorReadings.positionSensor.t;
-				//~ rotateRel_naive(angle);
-			//~ }
-			//~ beh_fol_wall.curveCounter++;
-			//~ if(beh_fol_wall.curveCounter>=200)
-			//~ {
-				//~ reset_follow_wall();
-			//~ }
-			//~ //printf("TURN_RADIUS_MEDIUM  ++++++beh_fol_wall.wall_side\n");
-			//~ movement_travel_in_curve_radius_direction(SPEED_FOLLOW_WALL, TURN_RADIUS_GO_ROUND_CORNER, beh_fol_wall.wall_side);
-			//~ //todo malo poboljšati ovo			
-		//~ }
-	//~ }
-	//~ //printf("\n");
-//~ }
-//~ void reset_follow_beacon(){
-	//~ 
-//~ }
-//~ bool test_follow_beacon(){
-	//~ if(behavior_sensorReadings.beaconSensor.isVisible == true)
-	//~ {
-		//~ return true;
-	//~ }
-	//~ return false;
-//~ }
-//~ void follow_beacon(){
-	//~ printf("FOLLOW_BEACON \n");
-	//~ if(fabs(behavior_sensorReadings.beaconSensor.relative_direction) > (M_PI/6))//30 degrees
-	//~ {
-		//~ bool direction = (behavior_sensorReadings.beaconSensor.relative_direction > 0) ? RIGHT : LEFT;
-		//~ movement_travel_in_curve_radius_direction(SPEED_MEDIUM, TURN_RADIUS_SMALL, direction);
-		//~ //rotateRel_naive(behavior_sensorReadings.beaconSensor.relative_direction);
-	//~ }
-	//~ else
-	//~ {
-		//~ movement_go_forward(SPEED_MEDIUM);
-	//~ }
-//~ }
-
-
-
-
-
-
-
-
-
-//~ 
-//~ 
 //~ int execute_behavior(int behavior_control)
 //~ {
 	//~ bool can_execute_list[NUMBER_OF_BEHAVIORS];
@@ -899,7 +1032,7 @@ void reset_follow_beacon();
 	//~ }
 	//~ return 0;
 //~ }
-
+//~ 
 
 
 
