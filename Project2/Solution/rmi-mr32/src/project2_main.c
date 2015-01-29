@@ -1,10 +1,11 @@
 //these should be libraries
 #include "rmi-mr32.c"
-#include "behaviors.c"
-#include "movements.c"
-#include "sensors.c"
+
 #include "helperFunctions.c"
+#include "sensors.c"
 #include "map.c"
+#include "movements.c"
+#include "behaviors.c"
 
 //#include "bluetooth_comm.h"
 //#include "bluetooth_comm.c"
@@ -13,9 +14,14 @@
 #include <stdlib.h>
 
 #include "rmi-mr32.h"
-#include "behaviors.h"
-#include "movements.h"
+
+#include "helperFunctions.h"
 #include "sensors.h"
+#include "map.h"
+#include "movements.h"
+#include "behaviors.h"
+
+
 
 
 int main(void){
@@ -31,7 +37,7 @@ int main(void){
 	while(1)
 	{		
 		int behavior_control = 0;
-		SensorReadings mySensorReadings;
+		//~ SensorReadings mySensorReadings;
 		printf("Press start to continue\n");		
 				
 		while(!startButton()){
@@ -45,10 +51,13 @@ int main(void){
 				while(stopButton());
 			}			
 		};
+		//wait(1);
 		//waitTick40ms();
 		//while(stopButton());
 		sensors_init();
 		behaviors_init();
+		
+		printf("initialisation finished \n");
 		//rotateRel_naive(M_PI/4);
 		//rotateRel_naive(-M_PI/4);
 		while(1){
@@ -57,10 +66,12 @@ int main(void){
 				while(stopButton());
 				break;
 			}
+			waitTick20ms();
 			//waitTick40ms();						// Wait for next 40ms tick
-			wait(1);	
+			//~ wait(1);	
+			//~ printf("################### behavior CALL ###################\n");
 			if(execute_behavior(behavior_control)==1){				
-				
+				printf("FINISH\n");
 				behaviors_finish();
 				sensors_finish();
 				/*victory dance  :) */
@@ -69,6 +80,7 @@ int main(void){
 				rotateRel_naive(-M_PI/4);
 				return 0;
 			}
+			//~ printf("################### behavior FINISHED ###################\n");
 			
 		};
 		behaviors_finish();

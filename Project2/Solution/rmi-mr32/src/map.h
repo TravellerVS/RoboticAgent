@@ -12,16 +12,24 @@
 
 #define MAP_FIELD_NUM_CONNECTIONS			4
 
+#define MAX_MAP_FIELDS 	512
+
 typedef struct{
 	double x;
 	double y;
 } PositionXY;
 
 typedef struct MapFieldConnection MapFieldConnection;
-
 typedef struct MapField MapField;
+
+struct MapFieldConnection{
+	MapField *field;
+	//int field_index;
+	int state;
+	//~ double distance;
+};
 struct MapField{
-	MapFieldConnection *connections[MAP_FIELD_NUM_CONNECTIONS];
+	MapFieldConnection connections[MAP_FIELD_NUM_CONNECTIONS];
 	//~ MapFieldConnection *left;
 	//~ MapFieldConnection *right;
 	//~ MapFieldConnection *up;
@@ -29,31 +37,17 @@ struct MapField{
 	int state;
 	PositionXY position;
 };
-//todo: add distance to connections 
-struct MapFieldConnection{
-	MapField *field;
-	int state;
-	//~ double distance;
-};
 
 struct MapFieldPath{
 	MapField *current_field;
 	MapField *next_field;
 	int distance;
-}
+};
 
 /**\brief function adds a connection to an existing field (map node)
  * */
 MapField *add_field(MapField *field, int direction, int connection_state, int new_field_state, PositionXY position);
 
-/**\brief MapField constructor
- * \return pointer to allocated MapField structure
- * */
-MapField *new_MapField();
-/**\brief MapFieldConnection constructor
- * \return pointer to allocated MapFieldConnection structure
- * */
-MapFieldConnection *new_MapFieldConnection();
 /**\brief sets starting filed
  * \detailed used for calculating shortest path for calculating the return journey
  * */
@@ -68,5 +62,13 @@ int direction_to_narest_unxplored_field();
 
 MapField *startingField;
 MapField *currentField;
+
+
+/**\brief initializes the map and sets the starting and current fields
+ * */
+void map_init(PositionXY position);
+
+
+void get_path_to_nearest_unexplored_field(int **return_path, int *end_index);
 
 #endif
