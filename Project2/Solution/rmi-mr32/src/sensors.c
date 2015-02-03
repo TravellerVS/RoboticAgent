@@ -45,6 +45,7 @@ SensorBufferReadings sensor_filteredSensorReadings;
 typedef struct{
 	bool analog_sensors_updated;
 	int num_readings;
+	double compas_offset;
 	SensorBufferReadings sensor_sensorReadings_buffer[READINGS_BUFFER_SIZE];
 } SensorInternalValues;
 SensorInternalValues internal_values;
@@ -56,6 +57,12 @@ void sensors_init(){
 	sensor_sensorReadings.last_position_index = -1;	
 	internal_values.analog_sensors_updated = NO;
 	internal_values.num_readings = 0;
+	internal_values.compas_offset = 0.0;
+	refresh_buffer();
+	refresh_buffer();
+	refresh_buffer();
+	refresh_buffer();
+	internal_values.compas_offset = sensor_filteredSensorReadings.positionSensor.compass_direction;
 	refresh_buffer();
 }
 
@@ -104,7 +111,6 @@ void refresh_sensorReadings(int state){
 	
 	save_reading_to_buffer();
 	
-	
 	if(internal_values.num_readings < 1000){
 		internal_values.num_readings++;
 	}
@@ -114,11 +120,10 @@ void refresh_sensorReadings(int state){
 	
 	calculate_filteredSensorReadings();
 	//~ printf("\n");
-	//~ printf("  Position: x=%5.3f, y=%5.3f, \n", sensor_sensorReadings.positionSensor.x, sensor_sensorReadings.positionSensor.y);
-	//~ printf("F_Position: x=%5.3f, y=%5.3f, t=%5.3f \n", sensor_filteredSensorReadings.positionSensor.x, sensor_filteredSensorReadings.positionSensor.y, sensor_filteredSensorReadings.positionSensor.t);
+	//~ printf("  Position: x=%5.3f, y=%5.3f, t=%5.3f \n", sensor_sensorReadings.positionSensor.x        , sensor_sensorReadings.positionSensor.y        , sensor_sensorReadings.positionSensor.t        );
+	printf("F_Position: x=%5.3f, y=%5.3f, t=%5.3f \n", sensor_filteredSensorReadings.positionSensor.x, sensor_filteredSensorReadings.positionSensor.y, sensor_filteredSensorReadings.positionSensor.t);
 	//~ printf("  ObstSensors : Obst_front=%5.3f, Obst_left=%5.3f, Obst_right=%5.3f \n", sensor_sensorReadings.obstacleSensor.front, sensor_sensorReadings.obstacleSensor.left, sensor_sensorReadings.obstacleSensor.right);
 	printf("F_ObstSensors: front=%5.3f, left=%5.3f, right=%5.3f, \n", sensor_filteredSensorReadings.obstacleSensor.front, sensor_filteredSensorReadings.obstacleSensor.left, sensor_filteredSensorReadings.obstacleSensor.right);
-	
 	
 	//~ printf("Obst_left=%03f, Obst_front=%03f, Obst_right=%03f, Bat_voltage=%03d, Ground_sens=%d, Beacon_visible=%d, Ground_sensors=", 
 	//~ sensor_sensorReadings.obstacleSensor.left, sensor_sensorReadings.obstacleSensor.front, sensor_sensorReadings.obstacleSensor.right, sensor_sensorReadings.batteryVoltage, sensor_sensorReadings.groundSensor,
@@ -312,8 +317,15 @@ void calculate_filteredSensorReadings(){
 		sensor_filteredSensorReadings.obstacleSensor.right += (double)k * internal_values.sensor_sensorReadings_buffer[i].obstacleSensor.right;
 		sensor_filteredSensorReadings.positionSensor.x += (double)k * internal_values.sensor_sensorReadings_buffer[i].positionSensor.x;
 		sensor_filteredSensorReadings.positionSensor.y += (double)k * internal_values.sensor_sensorReadings_buffer[i].positionSensor.y;
-		sensor_filteredSensorReadings.positionSensor.t += (double)k * internal_values.sensor_sensorReadings_buffer[i].positionSensor.t;
-		sensor_filteredSensorReadings.positionSensor.compass_direction += (double)k * internal_values.sensor_sensorReadings_buffer[i].positionSensor.compass_direction;
+		
+		double val_t = internal_values.sensor_sensorReadings_buffer[i].positionSensor.t;
+		normalize_angle_to_positive(&val_t);
+		sensor_filteredSensorReadings.positionSensor.t += (double)k * val_t;
+		
+		double val_compass_direction = internal_values.sensor_sensorReadings_buffer[i].positionSensor.compass_direction;
+		normalize_angle_to_positive(&val_compass_direction);
+		sensor_filteredSensorReadings.positionSensor.compass_direction += (double)k * val_compass_direction;
+		
 		sensor_filteredSensorReadings.groundSensor += k * internal_values.sensor_sensorReadings_buffer[i].groundSensor;
 	}
 	sensor_filteredSensorReadings.obstacleSensor.front = sensor_filteredSensorReadings.obstacleSensor.front / (double)sum_k;
@@ -331,13 +343,32 @@ SensorReadings get_sensorReadings(){
 }
 
 SensorReadings get_filteredSensorReadings(){
+	//~ printf("filteredSensorReadings: x=%5.3f, y=%5.3f, t=%5.3f \n", sensor_filteredSensorReadings.positionSensor.x, sensor_filteredSensorReadings.positionSensor.y, sensor_filteredSensorReadings.positionSensor.t);
 	//copy data from sensor readings
-	SensorReadings readings = sensor_sensorReadings;
+	SensorReadings readings;
+	
+	readings.startingPosition = sensor_sensorReadings.startingPosition;
+	readings.atBeaconArea = sensor_sensorReadings.atBeaconArea;
+	readings.batteryVoltage = sensor_sensorReadings.batteryVoltage;
+	
+	int i = 0;
+	for(i=0; (i<readings.last_position_index) && (i < MAX_NUM_POSITIONS);i++){
+		readings.positionsHistory[i] = sensor_sensorReadings.positionsHistory[i];
+	}
+	
+	readings.last_position_index = sensor_sensorReadings.last_position_index;
+	
+	//~ printf("filteredSensorReadings: x=%5.3f, y=%5.3f, t=%5.3f \n", sensor_filteredSensorReadings.positionSensor.x, sensor_filteredSensorReadings.positionSensor.y, sensor_filteredSensorReadings.positionSensor.t);
+	
+	
 	//overwrite buffered data
 	readings.obstacleSensor = sensor_filteredSensorReadings.obstacleSensor;
 	readings.beaconSensor = sensor_filteredSensorReadings.beaconSensor;
 	readings.positionSensor = sensor_filteredSensorReadings.positionSensor;
 	readings.groundSensor = sensor_filteredSensorReadings.groundSensor;
+	//~ printf("filteredSensorReadings: x=%5.3f, y=%5.3f, t=%5.3f \n", sensor_filteredSensorReadings.positionSensor.x, sensor_filteredSensorReadings.positionSensor.y, sensor_filteredSensorReadings.positionSensor.t);
+	//~ 
+	//~ printf("readings: x=%5.3f, y=%5.3f, t=%5.3f \n", readings.positionSensor.x, readings.positionSensor.y, readings.positionSensor.t);
 	return readings;
 }
 
@@ -348,7 +379,8 @@ SensorReadings get_new_sensorReadings(int state){
 }
 
 SensorReadings get_new_filteredSensorReadings(int state){		
-	refresh_sensorReadings(state);		
+	refresh_sensorReadings(state);
+	//~ printf("before get_filteredSensorReadings: x=%5.3f, y=%5.3f, t=%5.3f \n", sensor_filteredSensorReadings.positionSensor.x, sensor_filteredSensorReadings.positionSensor.y, sensor_filteredSensorReadings.positionSensor.t);
 	return get_filteredSensorReadings();
 }
 

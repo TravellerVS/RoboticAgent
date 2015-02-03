@@ -55,3 +55,26 @@ void new_points_from_distance_and_angle(double x_old, double y_old, double *x_ne
 	*y_new = y_old + dy;
 }
 
+int get_closest_direction( double angle , int num_directions){
+	int direction = -1;
+	if(num_directions>0){
+		int i = 0;
+		double min_difference = 2.0*M_PI;
+		for(i=0;i<num_directions;i++)
+		{
+			double difference = abs_angle_difference(angle, (i*(2.0*M_PI/num_directions)));
+			if(difference<min_difference){
+				min_difference = difference;
+				direction = i;
+			}
+		}
+	}else
+	{
+		//unvalid value given to the function
+		direction = -1;
+	}
+	return direction;
+}
+
+
+

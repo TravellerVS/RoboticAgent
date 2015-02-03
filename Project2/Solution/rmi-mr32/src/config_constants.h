@@ -22,13 +22,14 @@
 
 /** \brief speeds
  * */
-#define SPEED_BEFORE_STOP 				15
+#define SPEED_BEFORE_STOP 				7
 #define SPEED_SLOW 						20
 #define SPEED_MEDIUM 					40
 #define SPEED_FAST 						60
-#define SPEED_ROTATE 					40
-#define SPEED_ROTATE_BEFORE_STOP		15
+#define SPEED_ROTATE_BEFORE_STOP		7
 #define SPEED_ROTATE_SLOW				20
+#define SPEED_ROTATE 					40
+#define SPEED_ROTATE_FAST 				60
 #define SPEED_FOLLOW_WALL 				30
 
 //~ #define SPEED_SLOW 						10
@@ -48,8 +49,8 @@
 #define DISTANCE_COLISION_SIDES				15.0
 #define DISTANCE_NEAR_FRONT					30.0
 #define DISTANCE_NEAR_SIDES					40.0//35.0
-#define DISTANCE_FAR_SIDES					65.0
-#define DISTANCE_FAR_FRONT					65.0
+#define DISTANCE_FAR_SIDES					60.0
+#define DISTANCE_FAR_FRONT					60.0
 #define DISTANCE_CLOSE_SIDES				23.0
 
 /** \brief aproximate distance buffer vaulues for the return journey of the robot 
@@ -57,10 +58,13 @@
 #define STARTING_POINT_BUFFER				2.0
 #define CLOSE_TO_STARTING_POINT				20.0
 #define OTHER_POINT_BUFFER					10.0
-#define DISTANCE_XY_CLOSE					5.0
+#define DISTANCE_XY_CLOSE					10.0
 
-#define DISTANCE_BETWEEN_POINTS 			112.0
+#define DISTANCE_BETWEEN_POINTS 			200.0//112.0
 
+#define DISTANCE_NEXT_POINT_FRONT			DISTANCE_NEAR_FRONT//30.0
+#define DISTANCE_NEXT_POINT_SIDES			DISTANCE_CLOSE_SIDES//40.0
+//~ #define DISTANCE_NEXT_SIDE_POINT_SIDES		DISTANCE_FAR_SIDES//40.0
 
 /** \brief pseudo enumeration of the states
  * */
