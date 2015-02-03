@@ -12,7 +12,7 @@
 
 #define MAP_FIELD_NUM_CONNECTIONS			4
 
-#define MAX_MAP_FIELDS 	512
+#define MAX_MAP_FIELDS 						128
 
 typedef struct{
 	double x;
@@ -24,7 +24,6 @@ typedef struct MapField MapField;
 
 struct MapFieldConnection{
 	MapField *field;
-	//int field_index;
 	int state;
 	//~ double distance;
 };
@@ -35,14 +34,16 @@ struct MapField{
 	//~ MapFieldConnection *up;
 	//~ MapFieldConnection *down;
 	int state;
+	int num_visits;
+	int field_index;
 	PositionXY position;
 };
 
-struct MapFieldPath{
-	MapField *current_field;
-	MapField *next_field;
-	int distance;
-};
+//~ struct MapFieldPath{
+	//~ MapField *current_field;
+	//~ MapField *next_field;
+	//~ int distance;
+//~ };
 
 /**\brief function adds a connection to an existing field (map node)
  * */
@@ -60,8 +61,8 @@ void set_CurrentFiled(MapField *field);
 
 int direction_to_narest_unxplored_field();
 
-MapField *startingField;
-MapField *currentField;
+static MapField *startingField;
+static MapField *currentField;
 
 
 /**\brief initializes the map and sets the starting and current fields
@@ -69,6 +70,8 @@ MapField *currentField;
 void map_init(PositionXY position);
 
 
-void get_path_to_nearest_unexplored_field(int **return_path, int *end_index);
+void get_path_to_unexplored_field(MapField *return_path[MAX_MAP_FIELDS], int *end_index);
+
+void get_path_to_starting_field(MapField *return_path[MAX_MAP_FIELDS], int *end_index);
 
 #endif

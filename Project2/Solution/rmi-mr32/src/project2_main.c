@@ -1,24 +1,25 @@
 //these should be libraries
+
+#include "rmi-mr32.h"
 #include "rmi-mr32.c"
+#include "bluetooth_comm.h"
+#include "bluetooth_comm.c"
 
 #include "helperFunctions.c"
 #include "sensors.c"
 #include "map.c"
 #include "movements.c"
 #include "behaviors.c"
+#include "dijkstra.c"
 
-//#include "bluetooth_comm.h"
-//#include "bluetooth_comm.c"
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
 
-#include "rmi-mr32.h"
-
-#include "helperFunctions.h"
+//~ #include "helperFunctions.h"
 #include "sensors.h"
-#include "map.h"
-#include "movements.h"
+//~ #include "map.h"
+//~ #include "movements.h"
 #include "behaviors.h"
 
 
@@ -27,8 +28,8 @@
 int main(void){
 	initPIC32();
 	
-	//configBTUart(3, 115200); // Configure Bluetooth UART
-    //bt_on();     // enable bluetooth channel; printf
+	//~ configBTUart(3, 115200); // Configure Bluetooth UART
+    //~ bt_on();     // enable bluetooth channel; printf
                 // is now redirected to the bluetooth UART
 	
 	closedLoopControl( true );

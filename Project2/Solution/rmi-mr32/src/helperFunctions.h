@@ -32,4 +32,6 @@ double distance_between_points(double x1, double y1,double x2, double y2);
 double angle_to_dest(double x1, double y1, double t1,double x2, double y2);
 void new_points_from_distance_and_angle(double x_old, double y_old, double *x_new, double *y_new, double angle, double distace);
 
+int get_closest_direction( double angle , int num_directions);
+
 #endif

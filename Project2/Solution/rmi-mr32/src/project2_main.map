@@ -5,8 +5,6 @@ Archive member included because of file (symbol)
 ./libcompass.a(rmi_compass.o)
                               project2_main.o (initCompass)
 ./libcompass.a(can_pic32.o)   ./libcompass.a(rmi_compass.o) (CANConfigBaudRate)
-/opt/pic32mx/lib/libm.a(floor32.o)
-                              project2_main.o (floor)
 /opt/pic32mx/lib/libm.a(w_atan32.o)
                               project2_main.o (atan2)
 /opt/pic32mx/lib/libm.a(cos32.o)
@@ -67,34 +65,18 @@ Archive member included because of file (symbol)
 Allocating common symbols
 Common symbol       size              file
 
-path                0x800             project2_main.o
 _atexitptr          0x4               /opt/pic32mx/lib/libc.a(stdclean.o)
 errno               0x4               /opt/pic32mx/lib/libc.a(errno.o)
 tick80ms            0x4               project2_main.o
 sensor_sensorReadings
                     0x7d88            project2_main.o
 _sibuf              0x20              /opt/pic32mx/lib/libc.a(_iob.o)
-internal_values     0x378             project2_main.o
-beh_labyrinth_explore
-                    0x28              project2_main.o
-startingField       0x4               project2_main.o
-follow_starting_point_last_point
-                    0x4               project2_main.o
+internal_values     0x380             project2_main.o
 tick20ms            0x4               project2_main.o
-currentField        0x4               project2_main.o
-behavior_sensorReadings
-                    0x7d88            project2_main.o
-temp1               0x4               project2_main.o
 movements_last_values
                     0x10              project2_main.o
 _outdone            0x1               /opt/pic32mx/lib/libc.a(_iob.o)
-Behavior_fillow_path
-                    0x808             project2_main.o
-beh_fol_wall        0x28              project2_main.o
-behavior_struct     0x78              project2_main.o
-beh_av_col          0x8               project2_main.o
 tick40ms            0x4               project2_main.o
-map_fields          0x7000            project2_main.o
 tick160ms           0x4               project2_main.o
 sensor_filteredSensorReadings
                     0x58              project2_main.o
@@ -108,11 +90,11 @@ Microchip PIC32 Memory-Usage Report
 kseg0 Program-Memory Usage
 section                    address  length [bytes]      (dec)  Description
 -------                 ----------  -------------------------  -----------
-.text                   0x9d001400         0x95cc       38348  Application's executable code 
-.rodata                 0x9d00a9d0          0x6b4        1716  Read-only constant data 
-.data                   0x9d00b084          0x2d4         724  Data-initialization template 
-.sdata                  0x9d00b358           0x1c          28  Small data-initialization template 
-      Total kseg0_program_mem used  :      0x9f70       40816  7.9% of 0x7ec00
+.text                   0x9d001400         0xa400       41984  Application's executable code 
+.rodata                 0x9d00b800          0x73c        1852  Read-only constant data 
+.data                   0x9d00bf3c          0x2ec         748  Data-initialization template 
+.sdata                  0x9d00c228           0x20          32  Small data-initialization template 
+      Total kseg0_program_mem used  :      0xae48       44616  8.6% of 0x7ec00
 
 kseg0 Boot-Memory Usage
 section                    address  length [bytes]      (dec)  Description
@@ -134,21 +116,21 @@ section                    address  length [bytes]      (dec)  Description
 -------                 ----------  -------------------------  -----------
          Total kseg1_boot_mem used  :           0           0  <1% of 0x490
         --------------------------------------------------------------------------
-         Total Program Memory used  :      0xa24c       41548  7.9% of 0x80480
+         Total Program Memory used  :      0xb124       45348  8.6% of 0x80480
         --------------------------------------------------------------------------
 
 
 kseg1 Data-Memory Usage
 section                    address  length [bytes]      (dec)  Description
 -------                 ----------  -------------------------  -----------
-.data                   0xa0000000          0x2d4         724  Initialized data 
-.sdata                  0xa00002d4           0x1c          28  Small initialized data 
-.sbss                   0xa00002f0           0xfc         252  Small uninitialized data 
-.bss                    0xa00003f0        0x18200       98816  Uninitialized data 
-.stack                  0xa00185f0         0x2000        8192  Minimum space reserved for stack 
-         Total kseg1_data_mem used  :     0x1a5ec      108012  82.4% of 0x20000
+.data                   0xa0000000          0x2ec         748  Initialized data 
+.sdata                  0xa00002ec           0x20          32  Small initialized data 
+.sbss                   0xa0000310          0x104         260  Small uninitialized data 
+.bss                    0xa0000418        0x12608       75272  Uninitialized data 
+.stack                  0xa0012a20         0x2000        8192  Minimum space reserved for stack 
+         Total kseg1_data_mem used  :     0x14a18       84504  64.5% of 0x20000
         --------------------------------------------------------------------------
-            Total Data Memory used  :     0x1a5ec      108012  82.4% of 0x20000
+            Total Data Memory used  :     0x14a18       84504  64.5% of 0x20000
         --------------------------------------------------------------------------
 
 Memory Configuration
@@ -485,296 +467,305 @@ LOAD /opt/pic32mx/lib/startup.o
  *(.vector_63)
                 0x0000000000000001                ASSERT (((_vector_spacing == 0x0) || (SIZEOF (.vector_63) <= (_vector_spacing << 0x5))), function at exception vector 63 too large)
 
-.text           0x000000009d001400     0x95cc
+.text           0x000000009d001400     0xa400
                 0x000000009d001400                _text_begin = .
  *(.text .stub .text.* .gnu.linkonce.t.*)
- .text          0x000000009d001400     0x4cb0 project2_main.o
-                0x000000009d003cc0                add_field
-                0x000000009d005434                get_priority_from_id
-                0x000000009d005a5c                reset_follow_wall
-                0x000000009d004cf0                labyrinth_explore
-                0x000000009d004840                signal_ERROR
+ .text          0x000000009d001400     0x5bec project2_main.o
+                0x000000009d00405c                add_field
+                0x000000009d0060c8                get_priority_from_id
+                0x000000009d006d04                dijkstra_shortest_path_to_destination
+                0x000000009d006838                reset_follow_wall
+                0x000000009d005908                labyrinth_explore
+                0x000000009d005174                signal_ERROR
                 0x000000009d001e38                normalizeAngle
-                0x000000009d005e48                follow_beacon
-                0x000000009d005250                execute_behavior
-                0x000000009d003c18                new_MapField
-                0x000000009d005a84                test_follow_wall
-                0x000000009d002e18                calculate_extra_values
-                0x000000009d003ef4                set_StartingField
+                0x000000009d006c40                follow_beacon
+                0x000000009d005e80                execute_behavior
+                0x000000009d0041f8                copy_path_values
+                0x000000009d003fb8                new_MapField
+                0x000000009d006860                test_follow_wall
+                0x000000009d0030a0                calculate_extra_values
+                0x000000009d00422c                get_dijkstra_weights
+                0x000000009d0041dc                set_StartingField
                 0x000000009d001d94                pid
-                0x000000009d003bfc                new_MapFieldConnection
-                0x000000009d003a10                save_breadcrumbs
-                0x000000009d003f04                get_path_to_start
-                0x000000009d003530                normalize_obstacle_sensor
-                0x000000009d003bc8                get_new_filteredSensorReadings
-                0x000000009d005544                reset_default_priority_list
-                0x000000009d0048ac                signal_long_LED
-                0x000000009d002c60                readPositionSensors
-                0x000000009d0034bc                check_analog_sensors
+                0x000000009d003f9c                new_MapFieldConnection
+                0x000000009d003db0                save_breadcrumbs
+                0x000000009d0037ac                normalize_obstacle_sensor
+                0x000000009d003f68                get_new_filteredSensorReadings
+                0x000000009d0061d8                reset_default_priority_list
+                0x000000009d00521c                signal_long_LED
+                0x000000009d002ee8                readPositionSensors
+                0x000000009d004db8                movement_fullstop
+                0x000000009d003738                check_analog_sensors
                 0x000000009d002464                isr_enc_left
-                0x000000009d0051d8                reset_stop_at_beacon
-                0x000000009d005634                reset_follow_starting_point
-                0x000000009d0047c4                test_stop_at_starting_point
-                0x000000009d003af8                get_sensorReadings
-                0x000000009d004830                test_labyrinth_return_home
-                0x000000009d002c30                sensors_finish
-                0x000000009d0027dc                rad_to_deg
-                0x000000009d003504                readOtherSensors
-                0x000000009d0029c4                new_points_from_distance_and_angle
+                0x000000009d005e0c                reset_stop_at_beacon
+                0x000000009d0062a8                reset_follow_starting_point
+                0x000000009d005014                test_stop_at_starting_point
+                0x000000009d003e98                get_sensorReadings
+                0x000000009d005150                test_labyrinth_return_home
+                0x000000009d002eb8                sensors_finish
+                0x000000009d0028c8                rad_to_deg
+                0x000000009d0025fc                configBTUart
+                0x000000009d003780                readOtherSensors
+                0x000000009d002ab0                new_points_from_distance_and_angle
                 0x000000009d001400                setServoPos
-                0x000000009d0051e0                test_stop_at_beacon
+                0x000000009d005158                test_stop_at_beacon
                 0x000000009d00251c                isr_enc_right
-                0x000000009d005604                signal_short_LED
-                0x000000009d0049b4                rotate_to_angle
-                0x000000009d00556c                behaviors_init
-                0x000000009d0051f4                reset_wounder
+                0x000000009d005760                signal_short_LED
+                0x000000009d0053e4                rotate_to_angle
+                0x000000009d006200                behaviors_init
+                0x000000009d005e14                reset_wounder
                 0x000000009d001548                readAnalogSensors
-                0x000000009d005198                test_follow_path
-                0x000000009d00270c                angle_difference
+                0x000000009d005080                test_follow_path
+                0x000000009d0027f8                angle_difference
                 0x000000009d001a88                getRobotPos
                 0x000000009d0014a4                updateBatteryVoltage
-                0x000000009d002de0                readGroundSensor
-                0x000000009d004838                test_labyrinth_explore
-                0x000000009d00520c                reset_stop_at_starting_point
+                0x000000009d003068                readGroundSensor
+                0x000000009d00516c                test_labyrinth_explore
+                0x000000009d005e2c                reset_stop_at_starting_point
                 0x000000009d0025ec                __gxx_personality_v0
-                0x000000009d004920                labyrinth_return_home
+                0x000000009d002bb4                get_closest_direction
+                0x000000009d005db8                labyrinth_return_home
                 0x000000009d002260                isr_t2
                 0x000000009d001abc                led
-                0x000000009d005644                test_follow_starting_point
-                0x000000009d003efc                set_CurrentField
+                0x000000009d0062b8                test_follow_starting_point
+                0x000000009d0041e4                set_CurrentField
                 0x000000009d001b68                setSP2
-                0x000000009d0051d0                follow_path
+                0x000000009d005804                follow_path
                 0x000000009d001b18                leds
-                0x000000009d005214                set_return_priority_list
-                0x000000009d0039b8                sensors_init
-                0x000000009d004930                avoid_colision
-                0x000000009d00384c                refresh_sensorReadings
-                0x000000009d002ac8                get_filteredSensorReadings
+                0x000000009d005e34                set_return_priority_list
+                0x000000009d003d1c                sensors_init
+                0x000000009d002694                sendChar
+                0x000000009d0052ac                avoid_colision
+                0x000000009d003ac8                refresh_sensorReadings
+                0x000000009d002cd8                get_filteredSensorReadings
+                0x000000009d0058b0                set_follow_path_to_unexplored_field
                 0x000000009d002220                wait
-                0x000000009d004400                rotateRel_naive
-                0x000000009d00546c                change_behavior_priority
-                0x000000009d002c7c                readBeaconSensor
-                0x000000009d005178                reset_follow_path
-                0x000000009d005204                wounder
+                0x000000009d004c04                rotateRel_naive
+                0x000000009d006100                change_behavior_priority
+                0x000000009d002f04                readBeaconSensor
+                0x000000009d0057b0                reset_follow_path
+                0x000000009d005e24                wounder
                 0x000000009d00164c                initPIC32
-                0x000000009d0055fc                behaviors_finish
-                0x000000009d002f28                save_reading_to_buffer
-                0x000000009d0025fc                normalize_angle
-                0x000000009d005158                reset_labyrinth_explore
-                0x000000009d004b24                move_to_point
-                0x000000009d005ef0                main
-                0x000000009d003804                readCompassSensor
-                0x000000009d0045a0                movement_rotate
-                0x000000009d0028ec                distance_between_points
-                0x000000009d00276c                abs_angle_difference
-                0x000000009d00288c                angle_to_dest
-                0x000000009d0027a0                deg_to_rad
+                0x000000009d0062a0                behaviors_finish
+                0x000000009d0031b0                save_reading_to_buffer
+                0x000000009d0026e8                normalize_angle
+                0x000000009d005790                reset_labyrinth_explore
+                0x000000009d005558                move_to_point
+                0x000000009d006d54                main
+                0x000000009d003a80                readCompassSensor
+                0x000000009d004df0                movement_rotate
+                0x000000009d005d60                set_follow_path_to_return_home
+                0x000000009d004478                calculate_shortest_paths
+                0x000000009d0029d8                distance_between_points
+                0x000000009d002858                abs_angle_difference
+                0x000000009d002978                angle_to_dest
+                0x000000009d00288c                deg_to_rad
                 0x000000009d001bf0                readEncoders
-                0x000000009d003f2c                map_init
-                0x000000009d0048fc                stop_at_starting_point
-                0x000000009d0045b8                movement_travel_in_curve_radius
+                0x000000009d004728                map_init
+                0x000000009d0026dc                txc_bt
+                0x000000009d00526c                stop_at_starting_point
+                0x000000009d0045ec                get_path_to_unexplored_field
+                0x000000009d004e08                movement_travel_in_curve_radius
                 0x000000009d00210c                delay
                 0x000000009d001bb8                setVel2
-                0x000000009d0043f8                movement_go_forward
-                0x000000009d0043ec                movement_stop
+                0x000000009d004da4                movement_go_forward
+                0x000000009d004dac                movement_stop
                 0x000000009d001b5c                batteryVoltage
-                0x000000009d004888                stop_at_beacon
-                0x000000009d0049ac                test_avoid_colision
+                0x000000009d0051dc                stop_at_beacon
+                0x000000009d005344                test_avoid_colision
                 0x000000009d001ba4                setPWM2
-                0x000000009d003944                refresh_buffer
-                0x000000009d0049a4                reset_avoid_colision
-                0x000000009d005e34                test_follow_beacon
-                0x000000009d002818                angle_between_points
-                0x000000009d00564c                follow_starting_point
-                0x000000009d0047a4                movement_travel_in_curve_radius_direction
-                0x000000009d005e2c                reset_follow_beacon
+                0x000000009d003ca8                refresh_buffer
+                0x000000009d00533c                reset_avoid_colision
+                0x000000009d006c2c                test_follow_beacon
+                0x000000009d002904                angle_between_points
+                0x000000009d0062c0                follow_starting_point
+                0x000000009d004ff4                movement_travel_in_curve_radius_direction
+                0x000000009d005e04                reset_labyrinth_return_home
+                0x000000009d006c24                reset_follow_beacon
                 0x000000009d001f20                updateLocalization
                 0x000000009d001c1c                actuateMotors
-                0x000000009d003f24                get_path_recursion
-                0x000000009d0051fc                test_wounder
-                0x000000009d003f0c                get_path_to_nearest_unexplored_field
-                0x000000009d005b2c                follow_wall
-                0x000000009d003138                calculate_filteredSensorReadings
+                0x000000009d005e1c                test_wounder
+                0x000000009d006908                follow_wall
+                0x000000009d004570                get_path_to_starting_field
+                0x000000009d0033c0                calculate_filteredSensorReadings
+                0x000000009d0044e0                set_shortest_paths
                 0x000000009d002158                readLineSensors
-                0x000000009d002680                normalize_angle_to_positive
-                0x000000009d0042e0                driveMotors
-                0x000000009d003644                readObstacleSensors
+                0x000000009d0042c8                dijkstra_shortest_path
+                0x000000009d00276c                normalize_angle_to_positive
+                0x000000009d0047cc                driveMotors
+                0x000000009d0038c0                readObstacleSensors
                 0x000000009d001be8                closedLoopControl
-                0x000000009d003b50                get_new_sensorReadings
+                0x000000009d003ef0                get_new_sensorReadings
                 0x000000009d001b38                obstacleSensor
-                0x000000009d003988                get_accurate_sensor_reading
- .text          0x000000009d0060b0      0x990 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
-                0x000000009d0060b8                xprintf
- .text          0x000000009d006a40      0x18c ./libcompass.a(rmi_compass.o)
-                0x000000009d006b14                getCompassValue
-                0x000000009d006a40                initCompass
- .text          0x000000009d006bcc      0xb58 ./libcompass.a(can_pic32.o)
-                0x000000009d0072b8                CANSetTxPriority
-                0x000000009d0074fc                CANReceiveMessage
-                0x000000009d006e58                CANSetMemoryAddress
-                0x000000009d006f94                CANConfigRxChannel
-                0x000000009d007678                CANResetFIFO
-                0x000000009d007364                CANSendMessage
-                0x000000009d006db8                CANSetOperateMode
-                0x000000009d006bcc                CANConfigBaudRate
-                0x000000009d0071ac                CANConfigFIFO
-                0x000000009d006ec8                CANConfigMask
- .text          0x000000009d007724      0x108 /opt/pic32mx/lib/libm.a(floor32.o)
-                0x000000009d007724                dpfloor
-                0x000000009d007724                floor
- .text.atan2    0x000000009d00782c       0xe4 /opt/pic32mx/lib/libm.a(w_atan32.o)
-                0x000000009d00782c                atan2
- .text          0x000000009d007910      0x1a0 /opt/pic32mx/lib/libm.a(cos32.o)
-                0x000000009d007910                cos
-                0x000000009d007910                dpcos
- .text          0x000000009d007ab0      0x198 /opt/pic32mx/lib/libm.a(sin32.o)
-                0x000000009d007ab0                dpsin
-                0x000000009d007ab0                sin
- .text          0x000000009d007c48      0x1b4 /opt/pic32mx/lib/libm.a(reduct32.o)
-                0x000000009d007c48                reduct
- .text          0x000000009d007dfc      0x5d4 /opt/pic32mx/lib/libm.a(func32.o)
-                0x000000009d007fd0                exadd
-                0x000000009d007f04                exmul
-                0x000000009d007dfc                sigmax
-                0x000000009d00816c                exdiv
-                0x000000009d0080bc                exsub
- .text          0x000000009d0083d0     0x1128 /opt/pic32mx/lib/libm.a(dp32.o)
-                0x000000009d009480                fabs
-                0x000000009d009344                __eqdf2
-                0x000000009d009344                __gtdf2
-                0x000000009d0083d0                dpsub
-                0x000000009d008fd8                __floatsidf
-                0x000000009d009344                __ltdf2
-                0x000000009d00904c                ultodp
-                0x000000009d0087fc                dpmul
-                0x000000009d009140                dptofp
-                0x000000009d0092c0                __fixunsdfsi
-                0x000000009d009344                dpcmp
-                0x000000009d00909c                __extendsfdf2
-                0x000000009d0083d8                __adddf3
-                0x000000009d0092c0                dptoul
-                0x000000009d008b24                dpdiv
-                0x000000009d008fd8                litodp
-                0x000000009d009238                __fixdfsi
-                0x000000009d009344                __ledf2
-                0x000000009d00909c                fptodp
-                0x000000009d009468                __negdf2
-                0x000000009d0083d8                dpadd
-                0x000000009d008b24                __divdf3
-                0x000000009d0087fc                __muldf3
-                0x000000009d009140                __truncdfsf2
-                0x000000009d009344                __nedf2
-                0x000000009d009238                dptoli
-                0x000000009d00949c                nan
-                0x000000009d009480                dpfabs
-                0x000000009d009344                __gedf2
-                0x000000009d00949c                dpnan
-                0x000000009d0083d0                __subdf3
- .text.sqrt     0x000000009d0094f8       0x80 /opt/pic32mx/lib/libm.a(w_sqrt.o)
-                0x000000009d0094f8                sqrt
- .text          0x000000009d009578      0x2e0 /opt/pic32mx/lib/libm.a(atan32.o)
-                0x000000009d009578                dpatan2
-                0x000000009d009578                __mchp_atan2
- .text          0x000000009d009858      0x5bc /opt/pic32mx/lib/libm.a(sqrt32.o)
-                0x000000009d009af0                __mchp_sqrt
-                0x000000009d009858                exsqrt
-                0x000000009d009af0                dpsqrt
- .text          0x000000009d009e14      0x384 /opt/pic32mx/lib/libm.a(arc32.o)
-                0x000000009d00a0d4                dpatan
-                0x000000009d009e14                exatan
-                0x000000009d00a0d4                atan
- .text.exit     0x000000009d00a198       0x1c /opt/pic32mx/lib/libc.a(exit.o)
-                0x000000009d00a198                exit
+                0x000000009d003cec                get_accurate_sensor_reading
+ .text          0x000000009d006fec      0x990 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
+                0x000000009d006ff4                xprintf
+ .text          0x000000009d00797c      0x18c ./libcompass.a(rmi_compass.o)
+                0x000000009d007a50                getCompassValue
+                0x000000009d00797c                initCompass
+ .text          0x000000009d007b08      0xb58 ./libcompass.a(can_pic32.o)
+                0x000000009d0081f4                CANSetTxPriority
+                0x000000009d008438                CANReceiveMessage
+                0x000000009d007d94                CANSetMemoryAddress
+                0x000000009d007ed0                CANConfigRxChannel
+                0x000000009d0085b4                CANResetFIFO
+                0x000000009d0082a0                CANSendMessage
+                0x000000009d007cf4                CANSetOperateMode
+                0x000000009d007b08                CANConfigBaudRate
+                0x000000009d0080e8                CANConfigFIFO
+                0x000000009d007e04                CANConfigMask
+ .text.atan2    0x000000009d008660       0xe4 /opt/pic32mx/lib/libm.a(w_atan32.o)
+                0x000000009d008660                atan2
+ .text          0x000000009d008744      0x1a0 /opt/pic32mx/lib/libm.a(cos32.o)
+                0x000000009d008744                cos
+                0x000000009d008744                dpcos
+ .text          0x000000009d0088e4      0x198 /opt/pic32mx/lib/libm.a(sin32.o)
+                0x000000009d0088e4                dpsin
+                0x000000009d0088e4                sin
+ .text          0x000000009d008a7c      0x1b4 /opt/pic32mx/lib/libm.a(reduct32.o)
+                0x000000009d008a7c                reduct
+ .text          0x000000009d008c30      0x5d4 /opt/pic32mx/lib/libm.a(func32.o)
+                0x000000009d008e04                exadd
+                0x000000009d008d38                exmul
+                0x000000009d008c30                sigmax
+                0x000000009d008fa0                exdiv
+                0x000000009d008ef0                exsub
+ .text          0x000000009d009204     0x1128 /opt/pic32mx/lib/libm.a(dp32.o)
+                0x000000009d00a2b4                fabs
+                0x000000009d00a178                __eqdf2
+                0x000000009d00a178                __gtdf2
+                0x000000009d009204                dpsub
+                0x000000009d009e0c                __floatsidf
+                0x000000009d00a178                __ltdf2
+                0x000000009d009e80                ultodp
+                0x000000009d009630                dpmul
+                0x000000009d009f74                dptofp
+                0x000000009d00a0f4                __fixunsdfsi
+                0x000000009d00a178                dpcmp
+                0x000000009d009ed0                __extendsfdf2
+                0x000000009d00920c                __adddf3
+                0x000000009d00a0f4                dptoul
+                0x000000009d009958                dpdiv
+                0x000000009d009e0c                litodp
+                0x000000009d00a06c                __fixdfsi
+                0x000000009d00a178                __ledf2
+                0x000000009d009ed0                fptodp
+                0x000000009d00a29c                __negdf2
+                0x000000009d00920c                dpadd
+                0x000000009d009958                __divdf3
+                0x000000009d009630                __muldf3
+                0x000000009d009f74                __truncdfsf2
+                0x000000009d00a178                __nedf2
+                0x000000009d00a06c                dptoli
+                0x000000009d00a2d0                nan
+                0x000000009d00a2b4                dpfabs
+                0x000000009d00a178                __gedf2
+                0x000000009d00a2d0                dpnan
+                0x000000009d009204                __subdf3
+ .text.sqrt     0x000000009d00a32c       0x80 /opt/pic32mx/lib/libm.a(w_sqrt.o)
+                0x000000009d00a32c                sqrt
+ .text          0x000000009d00a3ac      0x2e0 /opt/pic32mx/lib/libm.a(atan32.o)
+                0x000000009d00a3ac                dpatan2
+                0x000000009d00a3ac                __mchp_atan2
+ .text          0x000000009d00a68c      0x5bc /opt/pic32mx/lib/libm.a(sqrt32.o)
+                0x000000009d00a924                __mchp_sqrt
+                0x000000009d00a68c                exsqrt
+                0x000000009d00a924                dpsqrt
+ .text          0x000000009d00ac48      0x384 /opt/pic32mx/lib/libm.a(arc32.o)
+                0x000000009d00af08                dpatan
+                0x000000009d00ac48                exatan
+                0x000000009d00af08                atan
+ .text.exit     0x000000009d00afcc       0x1c /opt/pic32mx/lib/libc.a(exit.o)
+                0x000000009d00afcc                exit
  .text._cleanup
-                0x000000009d00a1b4       0x60 /opt/pic32mx/lib/libc.a(stdclean.o)
-                0x000000009d00a1b4                _cleanup
- .text._exit    0x000000009d00a214        0x8 /opt/pic32mx/lib/libc.a(_exit.o)
-                0x000000009d00a214                _exit
- .text.fclose   0x000000009d00a21c      0x114 /opt/pic32mx/lib/libc.a(fclose.o)
-                0x000000009d00a21c                fclose
- .text.fflush   0x000000009d00a330       0xc4 /opt/pic32mx/lib/libc.a(fflush.o)
-                0x000000009d00a330                fflush
+                0x000000009d00afe8       0x60 /opt/pic32mx/lib/libc.a(stdclean.o)
+                0x000000009d00afe8                _cleanup
+ .text._exit    0x000000009d00b048        0x8 /opt/pic32mx/lib/libc.a(_exit.o)
+                0x000000009d00b048                _exit
+ .text.fclose   0x000000009d00b050      0x114 /opt/pic32mx/lib/libc.a(fclose.o)
+                0x000000009d00b050                fclose
+ .text.fflush   0x000000009d00b164       0xc4 /opt/pic32mx/lib/libc.a(fflush.o)
+                0x000000009d00b164                fflush
  .text._bufallo
-                0x000000009d00a3f4       0x58 /opt/pic32mx/lib/libc.a(buf.o)
-                0x000000009d00a3f4                _bufallo
+                0x000000009d00b228       0x58 /opt/pic32mx/lib/libc.a(buf.o)
+                0x000000009d00b228                _bufallo
  .text._buffree
-                0x000000009d00a44c       0x10 /opt/pic32mx/lib/libc.a(buf.o)
-                0x000000009d00a44c                _buffree
+                0x000000009d00b280       0x10 /opt/pic32mx/lib/libc.a(buf.o)
+                0x000000009d00b280                _buffree
  .text.getpagesize
-                0x000000009d00a45c        0x8 /opt/pic32mx/lib/libc.a(sbrk.o)
-                0x000000009d00a45c                getpagesize
+                0x000000009d00b290        0x8 /opt/pic32mx/lib/libc.a(sbrk.o)
+                0x000000009d00b290                getpagesize
  .text._stub_sbd_memlayout
-                0x000000009d00a464       0x2c /opt/pic32mx/lib/libc.a(sbrk.o)
-                0x000000009d00a464                _stub_sbd_memlayout
-                0x000000009d00a464                _sbd_memlayout
+                0x000000009d00b298       0x2c /opt/pic32mx/lib/libc.a(sbrk.o)
+                0x000000009d00b298                _stub_sbd_memlayout
+                0x000000009d00b298                _sbd_memlayout
  .text._sbrk_init
-                0x000000009d00a490      0x158 /opt/pic32mx/lib/libc.a(sbrk.o)
-                0x000000009d00a490                _sbrk_init
- .text._sbrk    0x000000009d00a5e8       0xbc /opt/pic32mx/lib/libc.a(sbrk.o)
-                0x000000009d00a5e8                _sbrk
- .text.sbrk     0x000000009d00a6a4       0x74 /opt/pic32mx/lib/libc.a(sbrk.o)
-                0x000000009d00a6a4                sbrk
- .text.write    0x000000009d00a718       0xa8 /opt/pic32mx/lib/libc.a(write.o)
-                0x000000009d00a718                write
- .text.remove   0x000000009d00a7c0        0x8 /opt/pic32mx/lib/libc.a(remove.o)
-                0x000000009d00a7c0                remove
- .text.close    0x000000009d00a7c8        0x8 /opt/pic32mx/lib/libc.a(close.o)
-                0x000000009d00a7c8                close
- .text          0x000000009d00a7d0       0xa8 /opt/pic32mx/lib/libc.a(memset.o)
-                0x000000009d00a7d0                memset
+                0x000000009d00b2c4      0x158 /opt/pic32mx/lib/libc.a(sbrk.o)
+                0x000000009d00b2c4                _sbrk_init
+ .text._sbrk    0x000000009d00b41c       0xbc /opt/pic32mx/lib/libc.a(sbrk.o)
+                0x000000009d00b41c                _sbrk
+ .text.sbrk     0x000000009d00b4d8       0x74 /opt/pic32mx/lib/libc.a(sbrk.o)
+                0x000000009d00b4d8                sbrk
+ .text.write    0x000000009d00b54c       0xa8 /opt/pic32mx/lib/libc.a(write.o)
+                0x000000009d00b54c                write
+ .text.remove   0x000000009d00b5f4        0x8 /opt/pic32mx/lib/libc.a(remove.o)
+                0x000000009d00b5f4                remove
+ .text.close    0x000000009d00b5fc        0x8 /opt/pic32mx/lib/libc.a(close.o)
+                0x000000009d00b5fc                close
+ .text          0x000000009d00b604       0xa8 /opt/pic32mx/lib/libc.a(memset.o)
+                0x000000009d00b604                memset
  .text._mon_putc
-                0x000000009d00a878       0xa4 /opt/pic32mx/lib/libc.a(_mon_putc.o)
-                0x000000009d00a878                _mon_putc
- .text          0x000000009d00a91c       0xb0 /opt/pic32mx/lib/startup.o
-                0x000000009d00a98c                printStr
-                0x000000009d00a96c                printInt
-                0x000000009d00a94c                readInt
-                0x000000009d00a9c4                resetCoreTimer
-                0x000000009d00a93c                putChar
-                0x000000009d00a99c                readStr
-                0x000000009d00a9ac                exxt
-                0x000000009d00a97c                printInt10
-                0x000000009d00a91c                inkey
-                0x000000009d00a92c                getChar
-                0x000000009d00a95c                readInt10
-                0x000000009d00a9bc                readCoreTimer
+                0x000000009d00b6ac       0xa4 /opt/pic32mx/lib/libc.a(_mon_putc.o)
+                0x000000009d00b6ac                _mon_putc
+ .text          0x000000009d00b750       0xb0 /opt/pic32mx/lib/startup.o
+                0x000000009d00b7c0                printStr
+                0x000000009d00b7a0                printInt
+                0x000000009d00b780                readInt
+                0x000000009d00b7f8                resetCoreTimer
+                0x000000009d00b770                putChar
+                0x000000009d00b7d0                readStr
+                0x000000009d00b7e0                exxt
+                0x000000009d00b7b0                printInt10
+                0x000000009d00b750                inkey
+                0x000000009d00b760                getChar
+                0x000000009d00b790                readInt10
+                0x000000009d00b7f0                readCoreTimer
  *(.text.*personality*)
  *(.gnu.warning)
  *(.mips16.fn.*)
  *(.mips16.call.*)
-                0x000000009d00a9cc                _text_end = .
+                0x000000009d00b800                _text_end = .
 
-.rodata         0x000000009d00a9d0      0x6b4
+.rodata         0x000000009d00b800      0x73c
  *(.rodata .rodata.* .gnu.linkonce.r.*)
- .rodata        0x000000009d00a9d0       0x34 project2_main.o
-                0x000000009d00a9d4                KI_num
-                0x000000009d00a9dc                KP_num
-                0x000000009d00a9d0                KI_den
-                0x000000009d00a9d8                KP_den
- *fill*         0x000000009d00aa04        0x4 00
- .rodata.cst8   0x000000009d00aa08      0x110 project2_main.o
-                                        0x1a8 (size before relaxing)
+ .rodata        0x000000009d00b800       0x38 project2_main.o
+                0x000000009d00b804                KI_num
+                0x000000009d00b80c                KP_num
+                0x000000009d00b800                KI_den
+                0x000000009d00b808                KP_den
+ .rodata.cst8   0x000000009d00b838      0x110 project2_main.o
+                                        0x1b0 (size before relaxing)
  .rodata.str1.4
-                0x000000009d00ab18      0x4ac project2_main.o
+                0x000000009d00b948      0x530 project2_main.o
  .rodata.str1.4
-                0x000000009d00afc4       0x11 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
+                0x000000009d00be78       0x11 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
                                          0x14 (size before relaxing)
- *fill*         0x000000009d00afd5        0x3 00
- .rodata.cst8   0x000000009d00afd8       0x10 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
+ *fill*         0x000000009d00be89        0x7 00
+ .rodata.cst8   0x000000009d00be90       0x10 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
                                          0x20 (size before relaxing)
- .rodata        0x000000009d00afe8       0x84 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
- .rodata        0x000000009d00b06c       0x15 /opt/pic32mx/lib/startup.o
+ .rodata        0x000000009d00bea0       0x84 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
+ .rodata        0x000000009d00bf24       0x15 /opt/pic32mx/lib/startup.o
  *(.rodata1)
-                0x000000009d00b084                . = ALIGN (0x4)
- *fill*         0x000000009d00b081        0x3 00
+                0x000000009d00bf3c                . = ALIGN (0x4)
+ *fill*         0x000000009d00bf39        0x3 00
 
-.sdata2         0x000000009d00b084        0x0
+.sdata2         0x000000009d00bf3c        0x0
  *(.sdata2 .sdata2.* .gnu.linkonce.s2.*)
-                0x000000009d00b084                . = ALIGN (0x4)
+                0x000000009d00bf3c                . = ALIGN (0x4)
 
-.sbss2          0x000000009d00b084        0x0
+.sbss2          0x000000009d00bf3c        0x0
  *(.sbss2 .sbss2.* .gnu.linkonce.sb2.*)
-                0x000000009d00b084                . = ALIGN (0x4)
+                0x000000009d00bf3c                . = ALIGN (0x4)
 
 .eh_frame_hdr
  *(.eh_frame_hdr)
@@ -785,169 +776,155 @@ LOAD /opt/pic32mx/lib/startup.o
 .dbg_data       0x00000000a0000000        0x0
                 0x00000000a0000000                . = (. + DEFINED (_DEBUGGER)?0x200:0x0)
 
-.data           0x00000000a0000000      0x2d4 load address 0x000000009d00b084
+.data           0x00000000a0000000      0x2ec load address 0x000000009d00bf3c
                 0x00000000a0000000                _data_begin = .
  *(.data .data.* .gnu.linkonce.d.*)
- .data          0x00000000a0000000       0x18 project2_main.o
- .data          0x00000000a0000018       0x70 /opt/pic32mx/lib/libm.a(sincos32.o)
-                0x00000000a0000018                sincon
-                0x00000000a0000050                coscon
+ .data          0x00000000a0000000       0x30 project2_main.o
+                0x00000000a0000000                uart_offsets
+ .data          0x00000000a0000030       0x70 /opt/pic32mx/lib/libm.a(sincos32.o)
+                0x00000000a0000030                sincon
+                0x00000000a0000068                coscon
  .data.math_errhandling_flag
-                0x00000000a0000088        0x4 /opt/pic32mx/lib/libm.a(s_lib_ver.o)
-                0x00000000a0000088                math_errhandling
- .data          0x00000000a000008c      0x1a8 /opt/pic32mx/lib/libm.a(arc32.o)
- .data          0x00000000a0000234       0xa0 /opt/pic32mx/lib/libc.a(_iob.o)
-                0x00000000a0000234                _iob
+                0x00000000a00000a0        0x4 /opt/pic32mx/lib/libm.a(s_lib_ver.o)
+                0x00000000a00000a0                math_errhandling
+ .data          0x00000000a00000a4      0x1a8 /opt/pic32mx/lib/libm.a(arc32.o)
+ .data          0x00000000a000024c       0xa0 /opt/pic32mx/lib/libc.a(_iob.o)
+                0x00000000a000024c                _iob
  *(.gnu.linkonce.d.*personality*)
  *(.data1)
-                0x000000009d00b084                _data_image_begin = LOADADDR (.data)
+                0x000000009d00bf3c                _data_image_begin = LOADADDR (.data)
 
 .eh_frame
  *(.eh_frame)
-                0x00000000a00082d0                _gp = (ALIGN (0x10) + 0x7ff0)
+                0x00000000a00082e0                _gp = (ALIGN (0x10) + 0x7ff0)
 
 .got
  *(.got.plt)
  *(.got)
 
-.sdata          0x00000000a00002d4       0x1c load address 0x000000009d00b358
-                0x00000000a00002d4                _sdata_begin = .
+.sdata          0x00000000a00002ec       0x20 load address 0x000000009d00c228
+                0x00000000a00002ec                _sdata_begin = .
  *(.sdata .sdata.* .gnu.linkonce.s.*)
- .sdata         0x00000000a00002d4       0x14 project2_main.o
-                0x00000000a00002dc                beacon_servo_sensor_limit_left
-                0x00000000a00002d8                beacon_servo_sensor_limit_right
-                0x00000000a00002d4                behaviors_state
-                0x00000000a00002e0                SERVO_WIDTH_MAX
-                0x00000000a00002e4                SERVO_WIDTH_MIN
- .sdata         0x00000000a00002e8        0x4 /opt/pic32mx/lib/libc.a(_iob.o)
-                0x00000000a00002e8                _Files
- .sdata         0x00000000a00002ec        0x4 /opt/pic32mx/lib/libc.a(c32_uart.o)
-                0x00000000a00002ec                __C32_UART
-                0x00000000a00002f0                _sdata_end = .
+ .sdata         0x00000000a00002ec       0x18 project2_main.o
+                0x00000000a00002f0                beacon_servo_sensor_limit_left
+                0x00000000a00002ec                beacon_servo_sensor_limit_right
+                0x00000000a00002f4                SERVO_WIDTH_MAX
+                0x00000000a00002f8                SERVO_WIDTH_MIN
+ .sdata         0x00000000a0000304        0x4 /opt/pic32mx/lib/libc.a(_iob.o)
+                0x00000000a0000304                _Files
+ .sdata         0x00000000a0000308        0x4 /opt/pic32mx/lib/libc.a(c32_uart.o)
+                0x00000000a0000308                __C32_UART
+                0x00000000a000030c                _sdata_end = .
 
 .lit8
  *(.lit8)
 
 .lit4
  *(.lit4)
-                0x00000000a00002f0                . = ALIGN (0x4)
-                0x00000000a00002f0                _data_end = .
-                0x00000000a00002f0                _bss_begin = .
+                0x00000000a000030c                . = ALIGN (0x4)
+                0x00000000a000030c                _data_end = .
+                0x00000000a000030c                _bss_begin = .
 
-.sbss           0x00000000a00002f0       0xfc
-                0x00000000a00002f0                _sbss_begin = .
+.sbss           0x00000000a0000310      0x104
+                0x00000000a0000310                _sbss_begin = .
  *(.dynsbss)
  *(.sbss .sbss.* .gnu.linkonce.sb.*)
- .sbss          0x00000000a00002f0       0xb0 project2_main.o
-                0x00000000a0000304                beacon_servo_counter
-                0x00000000a000030c                beacon_servo_pos
-                0x00000000a00002f0                next_point_rel_dir
-                0x00000000a00002f8                map_num_fields
-                0x00000000a00002fc                path_end_index
-                0x00000000a0000300                save_breadcrumbs_counter
-                0x00000000a0000308                beacon_servo_dir
- .sbss          0x00000000a00003a0        0x4 /opt/pic32mx/lib/libc.a(buf.o)
- .sbss          0x00000000a00003a4        0xc /opt/pic32mx/lib/libc.a(sbrk.o)
-                0x00000000a00003a8                _minbrk
-                0x00000000a00003a4                _maxbrk
+ .sbss          0x00000000a0000310       0xd0 project2_main.o
+                0x00000000a0000314                beacon_servo_counter
+                0x00000000a000031c                beacon_servo_pos
+                0x00000000a0000320                bt_enable
+                0x00000000a0000310                save_breadcrumbs_counter
+                0x00000000a0000318                beacon_servo_dir
+ .sbss          0x00000000a00003e0        0x4 /opt/pic32mx/lib/libc.a(buf.o)
+ .sbss          0x00000000a00003e4        0xc /opt/pic32mx/lib/libc.a(sbrk.o)
+                0x00000000a00003e8                _minbrk
+                0x00000000a00003e4                _maxbrk
  *(.scommon)
- .scommon       0x00000000a00003b0       0x2c project2_main.o
-                0x00000000a00003b0                tick80ms
-                0x00000000a00003b4                startingField
-                0x00000000a00003b8                follow_starting_point_last_point
-                0x00000000a00003bc                tick20ms
-                0x00000000a00003c0                currentField
-                0x00000000a00003c4                temp1
-                0x00000000a00003c8                beh_av_col
-                0x00000000a00003d0                tick40ms
-                0x00000000a00003d4                tick160ms
-                0x00000000a00003d8                tick10ms
- .scommon       0x00000000a00003dc        0x4 /opt/pic32mx/lib/libc.a(errno.o)
-                0x00000000a00003dc                errno
- .scommon       0x00000000a00003e0        0x4 /opt/pic32mx/lib/libc.a(stdclean.o)
-                0x00000000a00003e0                _atexitptr
- .scommon       0x00000000a00003e4        0x1 /opt/pic32mx/lib/libc.a(_iob.o)
-                0x00000000a00003e4                _outdone
- *fill*         0x00000000a00003e5        0x3 00
- .scommon       0x00000000a00003e8        0x4 /opt/pic32mx/lib/libc.a(tfiles.o)
-                0x00000000a00003e8                _tfilesptr
-                0x00000000a00003ec                _sbss_end = .
+ .scommon       0x00000000a00003f0       0x14 project2_main.o
+                0x00000000a00003f0                tick80ms
+                0x00000000a00003f4                tick20ms
+                0x00000000a00003f8                tick40ms
+                0x00000000a00003fc                tick160ms
+                0x00000000a0000400                tick10ms
+ .scommon       0x00000000a0000404        0x4 /opt/pic32mx/lib/libc.a(errno.o)
+                0x00000000a0000404                errno
+ .scommon       0x00000000a0000408        0x4 /opt/pic32mx/lib/libc.a(stdclean.o)
+                0x00000000a0000408                _atexitptr
+ .scommon       0x00000000a000040c        0x1 /opt/pic32mx/lib/libc.a(_iob.o)
+                0x00000000a000040c                _outdone
+ *fill*         0x00000000a000040d        0x3 00
+ .scommon       0x00000000a0000410        0x4 /opt/pic32mx/lib/libc.a(tfiles.o)
+                0x00000000a0000410                _tfilesptr
+                0x00000000a0000414                _sbss_end = .
 
-.bss            0x00000000a00003f0    0x18200
+.bss            0x00000000a0000418    0x12608
  *(.dynbss)
  *(.bss .bss.* .gnu.linkonce.b.*)
- .bss           0x00000000a00003f0      0x100 project2_main.o
- .bss           0x00000000a00004f0       0xd0 ./libcompass.a(rmi_compass.o)
- .bss           0x00000000a00005c0       0x18 /opt/pic32mx/lib/libc.a(sbrk.o)
+ .bss           0x00000000a0000418     0xa358 project2_main.o
+ .bss           0x00000000a000a770       0xd0 ./libcompass.a(rmi_compass.o)
+ .bss           0x00000000a000a840       0x18 /opt/pic32mx/lib/libc.a(sbrk.o)
  *(COMMON)
- COMMON         0x00000000a00005d8    0x17fd8 project2_main.o
-                0x00000000a00005d8                path
-                0x00000000a0000dd8                sensor_sensorReadings
-                0x00000000a0008b60                internal_values
-                0x00000000a0008ed8                beh_labyrinth_explore
-                0x00000000a0008f00                behavior_sensorReadings
-                0x00000000a0010c88                movements_last_values
-                0x00000000a0010c98                Behavior_fillow_path
-                0x00000000a00114a0                beh_fol_wall
-                0x00000000a00114c8                behavior_struct
-                0x00000000a0011540                map_fields
-                0x00000000a0018540                sensor_filteredSensorReadings
-                0x00000000a0018598                analogSensors
- COMMON         0x00000000a00185b0       0x40 /opt/pic32mx/lib/libc.a(_iob.o)
-                0x00000000a00185b0                _sibuf
-                0x00000000a00185d0                _sobuf
-                0x00000000a00185f0                . = ALIGN (0x4)
-                0x00000000a00185f0                . = ALIGN (0x4)
-                0x00000000a00185f0                _end = .
-                0x00000000a00185f0                _bss_end = .
+ COMMON         0x00000000a000a858     0x8188 project2_main.o
+                0x00000000a000a858                sensor_sensorReadings
+                0x00000000a00125e0                internal_values
+                0x00000000a0012960                movements_last_values
+                0x00000000a0012970                sensor_filteredSensorReadings
+                0x00000000a00129c8                analogSensors
+ COMMON         0x00000000a00129e0       0x40 /opt/pic32mx/lib/libc.a(_iob.o)
+                0x00000000a00129e0                _sibuf
+                0x00000000a0012a00                _sobuf
+                0x00000000a0012a20                . = ALIGN (0x4)
+                0x00000000a0012a20                . = ALIGN (0x4)
+                0x00000000a0012a20                _end = .
+                0x00000000a0012a20                _bss_end = .
 
-.persist        0x00000000a00185f0        0x0
+.persist        0x00000000a0012a20        0x0
  *(.persist)
-                0x00000000a00185f0                . = ALIGN (0x4)
+                0x00000000a0012a20                . = ALIGN (0x4)
 
-.heap           0x00000000a00185f0        0x0
-                0x00000000a00185f0                _heap = .
-                0x00000000a00185f0                . = (. + _min_heap_size)
+.heap           0x00000000a0012a20        0x0
+                0x00000000a0012a20                _heap = .
+                0x00000000a0012a20                . = (. + _min_heap_size)
 
-.stack          0x00000000a00185f0     0x2000
-                0x00000000a00185f0                _splim = .
-                0x00000000a00185f0                _SPLIM = .
-                0x00000000a001a5f0                . = (. + _min_stack_size)
- *fill*         0x00000000a00185f0     0x2000 00
+.stack          0x00000000a0012a20     0x2000
+                0x00000000a0012a20                _splim = .
+                0x00000000a0012a20                _SPLIM = .
+                0x00000000a0014a20                . = (. + _min_stack_size)
+ *fill*         0x00000000a0012a20     0x2000 00
 
-.ramfunc        0x00000000a001a800        0x0 load address 0x000000009d00b374
-                0x00000000a001a800                _ramfunc_begin = .
+.ramfunc        0x00000000a0015000        0x0 load address 0x000000009d00c248
+                0x00000000a0015000                _ramfunc_begin = .
  *(.ramfunc .ramfunc.*)
-                0x00000000a001a800                . = ALIGN (0x4)
-                0x00000000a001a800                _ramfunc_end = .
-                0x000000009d00b374                _ramfunc_image_begin = LOADADDR (.ramfunc)
+                0x00000000a0015000                . = ALIGN (0x4)
+                0x00000000a0015000                _ramfunc_end = .
+                0x000000009d00c248                _ramfunc_image_begin = LOADADDR (.ramfunc)
                 0x0000000000000000                _ramfunc_length = SIZEOF (.ramfunc)
-                0x000000000001a800                _bmxdkpba_address = (_ramfunc_begin - 0xa0000000)
+                0x0000000000015000                _bmxdkpba_address = (_ramfunc_begin - 0xa0000000)
                 0x0000000000020000                _bmxdudba_address = 0x20000
                 0x0000000000020000                _bmxdupba_address = 0x20000
                 0x00000000a0020000                _stack = (_ramfunc_length > 0x0)?(_ramfunc_begin - 0x4):0xa0020000
                 0x0000000000000001                ASSERT (((_min_stack_size + _min_heap_size) <= (_stack - _heap)), Not enough space to allocate both stack and heap.  Reduce heap and/or stack size.)
 
-.pdr            0x0000000000000000     0x12c0
+.pdr            0x0000000000000000     0x1460
  *(.pdr)
- .pdr           0x0000000000000000      0xea0 project2_main.o
- .pdr           0x0000000000000ea0       0x40 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
- .pdr           0x0000000000000ee0       0x40 ./libcompass.a(rmi_compass.o)
- .pdr           0x0000000000000f20      0x140 ./libcompass.a(can_pic32.o)
- .pdr           0x0000000000001060       0x20 /opt/pic32mx/lib/libm.a(w_atan32.o)
- .pdr           0x0000000000001080       0x20 /opt/pic32mx/lib/libm.a(w_sqrt.o)
- .pdr           0x00000000000010a0       0x20 /opt/pic32mx/lib/libc.a(exit.o)
- .pdr           0x00000000000010c0       0x20 /opt/pic32mx/lib/libc.a(stdclean.o)
- .pdr           0x00000000000010e0       0x20 /opt/pic32mx/lib/libc.a(_exit.o)
- .pdr           0x0000000000001100       0x20 /opt/pic32mx/lib/libc.a(fclose.o)
- .pdr           0x0000000000001120       0x20 /opt/pic32mx/lib/libc.a(fflush.o)
- .pdr           0x0000000000001140       0x40 /opt/pic32mx/lib/libc.a(buf.o)
- .pdr           0x0000000000001180       0xa0 /opt/pic32mx/lib/libc.a(sbrk.o)
- .pdr           0x0000000000001220       0x20 /opt/pic32mx/lib/libc.a(write.o)
- .pdr           0x0000000000001240       0x20 /opt/pic32mx/lib/libc.a(remove.o)
- .pdr           0x0000000000001260       0x20 /opt/pic32mx/lib/libc.a(close.o)
- .pdr           0x0000000000001280       0x20 /opt/pic32mx/lib/libc.a(memset.o)
- .pdr           0x00000000000012a0       0x20 /opt/pic32mx/lib/libc.a(_mon_putc.o)
+ .pdr           0x0000000000000000     0x1040 project2_main.o
+ .pdr           0x0000000000001040       0x40 /opt/pic32mx/lib/libdetpic32.a(xprintf.o)
+ .pdr           0x0000000000001080       0x40 ./libcompass.a(rmi_compass.o)
+ .pdr           0x00000000000010c0      0x140 ./libcompass.a(can_pic32.o)
+ .pdr           0x0000000000001200       0x20 /opt/pic32mx/lib/libm.a(w_atan32.o)
+ .pdr           0x0000000000001220       0x20 /opt/pic32mx/lib/libm.a(w_sqrt.o)
+ .pdr           0x0000000000001240       0x20 /opt/pic32mx/lib/libc.a(exit.o)
+ .pdr           0x0000000000001260       0x20 /opt/pic32mx/lib/libc.a(stdclean.o)
+ .pdr           0x0000000000001280       0x20 /opt/pic32mx/lib/libc.a(_exit.o)
+ .pdr           0x00000000000012a0       0x20 /opt/pic32mx/lib/libc.a(fclose.o)
+ .pdr           0x00000000000012c0       0x20 /opt/pic32mx/lib/libc.a(fflush.o)
+ .pdr           0x00000000000012e0       0x40 /opt/pic32mx/lib/libc.a(buf.o)
+ .pdr           0x0000000000001320       0xa0 /opt/pic32mx/lib/libc.a(sbrk.o)
+ .pdr           0x00000000000013c0       0x20 /opt/pic32mx/lib/libc.a(write.o)
+ .pdr           0x00000000000013e0       0x20 /opt/pic32mx/lib/libc.a(remove.o)
+ .pdr           0x0000000000001400       0x20 /opt/pic32mx/lib/libc.a(close.o)
+ .pdr           0x0000000000001420       0x20 /opt/pic32mx/lib/libc.a(memset.o)
+ .pdr           0x0000000000001440       0x20 /opt/pic32mx/lib/libc.a(_mon_putc.o)
 
 .reginfo        0x0000000000000000       0x18
  *(.reginfo)
@@ -1241,9 +1218,9 @@ LOAD /opt/pic32mx/lib/startup.o
  *(.note.GNU-stack)
 OUTPUT(project2_main.elf elf32-tradlittlemips)
 
-.mdebug.abi32   0x000000009d00b374        0x0
+.mdebug.abi32   0x000000009d00c248        0x0
 
-.rel.dyn        0x000000009d00b374        0x0
+.rel.dyn        0x000000009d00c248        0x0
 
-.debug_ranges   0x000000009d00b374       0x18
- .debug_ranges  0x000000009d00b374       0x18 /opt/pic32mx/lib/libc.a(fclose.o)
+.debug_ranges   0x000000009d00c248       0x18
+ .debug_ranges  0x000000009d00c248       0x18 /opt/pic32mx/lib/libc.a(fclose.o)

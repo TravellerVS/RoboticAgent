@@ -19,6 +19,7 @@
 
 #define LABYRINTH_EXPLORE_ID 			7
 #define LABYRINTH_RETURN_HOME_ID		8
+#define FOLLOW_PATH_ID					9
 
 #define NUMBER_OF_BEHAVIORS		10
 
@@ -73,7 +74,13 @@ void reset_labyrinth_explore();
 
 bool test_labyrinth_return_home();
 void labyrinth_return_home();
-void reset_labyrinth_return();
+void reset_labyrinth_return_home();
+
+void set_follow_path_to_unexplored_field();
+void set_follow_path_to_return_home();
+void reset_follow_path();
+bool test_follow_path();
+void follow_path();
 
 void reset_default_priority_list();
 void set_return_priority_list();
@@ -90,7 +97,7 @@ typedef struct
 	bool isActive;
 } Behavior_generic_vals;
 
-SensorReadings behavior_sensorReadings;
+static SensorReadings behavior_sensorReadings;
 
 typedef struct
 {
@@ -101,20 +108,20 @@ typedef struct
 	int init_state_counter;
 	
 } Behavior_struct_values;
-Behavior_struct_values behavior_struct;
+static Behavior_struct_values behavior_struct;
 
-bool temp1;
-int behaviors_state = STATE_INIT;
+static int behaviors_state = STATE_INIT;
 
-double next_point_rel_dir = 0.0;
 int execute_behavior(int behavior_control)
 {
 	//~ printf("behavior BEGIN\n");
 	bool can_execute_list[NUMBER_OF_BEHAVIORS];
 	behavior_sensorReadings = get_new_filteredSensorReadings(behaviors_state);
+	
+	//~ printf("behavior_sensorReadings: x=%5.3f, y=%5.3f, t=%5.3f,\n",behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, behavior_sensorReadings.positionSensor.t);
 	//~ behavior_sensorReadings = get_new_sensorReadings(behaviors_state);
 	//~ return 0;
-	can_execute_list[AVOID_COLISION_ID] = test_avoid_colision();
+	can_execute_list[AVOID_COLISION_ID] = false;//test_avoid_colision();
 	
 	//~ printf("behaviors_state = %d  \n",behaviors_state);
 		
@@ -124,16 +131,19 @@ int execute_behavior(int behavior_control)
 		can_execute_list[STOP_AT_STARTING_POINT_ID] = test_stop_at_starting_point();
 		can_execute_list[STOP_AT_BEACON_ID] = false;
 		can_execute_list[LABYRINTH_EXPLORE_ID] = false;
+		can_execute_list[FOLLOW_PATH_ID] = test_follow_path();
 		can_execute_list[LABYRINTH_RETURN_HOME_ID] = test_labyrinth_return_home();
 	}else if(behaviors_state == STATE_INIT){
 		can_execute_list[STOP_AT_STARTING_POINT_ID] = false;
 		can_execute_list[STOP_AT_BEACON_ID] = false;
-		can_execute_list[LABYRINTH_EXPLORE_ID] = false;
+		can_execute_list[FOLLOW_PATH_ID] = false;
+		can_execute_list[LABYRINTH_EXPLORE_ID] = false;		
 		can_execute_list[LABYRINTH_RETURN_HOME_ID] = false;
 	}else if(behaviors_state == STATE_SEARCHING_FOR_BEACON_AREA){
 		can_execute_list[STOP_AT_STARTING_POINT_ID] = false;
-		can_execute_list[STOP_AT_BEACON_ID] = false; //test_stop_at_starting_point();
-		can_execute_list[LABYRINTH_EXPLORE_ID] = test_labyrinth_explore(); //true
+		can_execute_list[STOP_AT_BEACON_ID] = test_stop_at_beacon();
+		can_execute_list[FOLLOW_PATH_ID] = test_follow_path();
+		can_execute_list[LABYRINTH_EXPLORE_ID] = test_labyrinth_explore(); //true		
 		can_execute_list[LABYRINTH_RETURN_HOME_ID] = false;
 	}else{
 		signal_ERROR();
@@ -145,7 +155,7 @@ int execute_behavior(int behavior_control)
 	
 	for(priority=0;priority<NUMBER_OF_BEHAVIORS;priority++){
 		if(can_execute_list[behavior_struct.priority_list[priority]] == true){
-			leds(behavior_struct.priority_list[priority]);
+			//~ leds(behavior_struct.priority_list[priority]);
 			switch ( behavior_struct.priority_list[priority] ) {				
 				case STOP_AT_BEACON_ID:
 					//if stopped at beacon  exchange this behavior for stop at starting point
@@ -169,6 +179,9 @@ int execute_behavior(int behavior_control)
 				case LABYRINTH_EXPLORE_ID:
 					labyrinth_explore();
 					break;
+				case FOLLOW_PATH_ID:
+					follow_path();
+					break;
 				case LABYRINTH_RETURN_HOME_ID:
 					labyrinth_return_home();
 					break;			
@@ -189,13 +202,13 @@ int execute_behavior(int behavior_control)
 	return 0;
 }
 
-Behavior_generic_vals beh_av_col;
+static Behavior_generic_vals beh_av_col;
 void reset_avoid_colision(){
 	beh_av_col.isActive = false;	
 }
 bool test_avoid_colision(){
 	//debug
-	return false;
+	//~ return false;
 	if(behavior_sensorReadings.obstacleSensor.front <= DISTANCE_COLISION_FRONT 
 	|| behavior_sensorReadings.obstacleSensor.right <= DISTANCE_COLISION_SIDES
 	|| behavior_sensorReadings.obstacleSensor.left  <= DISTANCE_COLISION_SIDES)
@@ -219,19 +232,21 @@ bool move_to_point(double dest_x, double dest_y)
 {
 	double distance = distance_between_points(behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, dest_x, dest_y);
 	bool result = (distance<=DISTANCE_XY_CLOSE) ? true : false;
+	printf("move_to_point values: x=%f, y=%f, t=%f, destx=%f, desty=%f \n",behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, behavior_sensorReadings.positionSensor.t, dest_x, dest_y);
 	if(result){
 		//~ printf(" stop \n");	
 		//~ movement_stop();
-		wait(1);
+		//~ wait(1);
 	}else{
-		
+		leds(0);
 		double absolute_angle = angle_between_points(behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, dest_x, dest_y);
-		
 		if(rotate_to_angle(absolute_angle) == true){
 			//buffered movement -> it slows down if when it's close to the target
 			//~ printf(" forward ");
-			double speed = distance*0.5;
-			if(speed>SPEED_MEDIUM){
+			int speed = (int)((distance/DISTANCE_BETWEEN_POINTS)*((double)SPEED_MEDIUM));
+			if(speed<SPEED_BEFORE_STOP){
+				speed=SPEED_BEFORE_STOP;
+			}else if(speed>SPEED_MEDIUM){
 				speed=SPEED_MEDIUM;
 			}
 			movement_go_forward(speed);
@@ -242,18 +257,17 @@ bool move_to_point(double dest_x, double dest_y)
 }
 
 bool rotate_to_angle(double targetAngle){
-	double tolerance = (2*M_PI)/36;
+	double tolerance = (2*M_PI)/72;
 	double angleDifference = angle_difference(behavior_sensorReadings.positionSensor.t,targetAngle);
 	bool result = (fabs(angleDifference) < tolerance) ? true : false;
 	if(result==true){
 		//~ movement_stop();
-	}
-	else
-	{
-		printf("rotate, angleDifference=%5.3f , targetAngle=%5.3f \n",angleDifference,targetAngle);
-		bool direction = (angleDifference < 0) ? RIGHT : LEFT ;
+	}else{
+		leds(15);
+		printf("rotate, angleDifference=%5.3f , targetAngle=%5.3f \n", angleDifference, targetAngle);
+		bool direction = (angleDifference < 0) ? RIGHT : LEFT;
 		
-		double speed = fabs(angleDifference*20.0);
+		int speed = (int)((fabs(angleDifference)/M_PI)*((double)SPEED_ROTATE));
 		if(speed<SPEED_ROTATE_BEFORE_STOP){
 			speed=SPEED_ROTATE_BEFORE_STOP;
 		}else if(speed>SPEED_ROTATE){
@@ -271,7 +285,7 @@ typedef struct{
 	Behavior_generic_vals generic;
 	MapField *next_field;
 } Behavior_labyrinth_explore_vals;
-Behavior_labyrinth_explore_vals beh_labyrinth_explore;
+static Behavior_labyrinth_explore_vals beh_labyrinth_explore;
 
 #define LAB_BEH_STATE_MOVE_TO_NEXT_POINT 	0
 #define LAB_BEH_FIND_NEXT_UNDEF_FIELD 		1
@@ -288,16 +302,18 @@ void labyrinth_explore(){
 	printf("LABYRINTH_EXPLORE STATE=%d \n", beh_labyrinth_explore.state);
 	//debug
 	//~ beh_labyrinth_explore.state = 0;
+	leds(beh_labyrinth_explore.state+1);
 	if(beh_labyrinth_explore.state == LAB_BEH_STATE_MOVE_TO_NEXT_POINT)
 	{
 		//~ printf("move to next point \n");
-		printf("move_to_point values: x=%f, y=%f, t=%f, destx=%f, desty=%f \n",behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, behavior_sensorReadings.positionSensor.t, (*beh_labyrinth_explore.next_field).position.x, (*beh_labyrinth_explore.next_field).position.y);
+		//~ printf("move_to_point values: x=%f, y=%f, t=%f, destx=%f, desty=%f \n",behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, behavior_sensorReadings.positionSensor.t, (*beh_labyrinth_explore.next_field).position.x, (*beh_labyrinth_explore.next_field).position.y);
 		//move to next point
 		if(move_to_point((*beh_labyrinth_explore.next_field).position.x,(*beh_labyrinth_explore.next_field).position.y)){
 			movement_stop();
 			beh_labyrinth_explore.state = LAB_BEH_FIND_NEXT_UNDEF_FIELD;
 			set_CurrentField(beh_labyrinth_explore.next_field);
 			printf("FINISHED \n");
+			signal_short_LED();
 		}
 	}
 	else if(beh_labyrinth_explore.state == LAB_BEH_FIND_NEXT_UNDEF_FIELD)
@@ -307,16 +323,20 @@ void labyrinth_explore(){
 		//find next undefined state
 		int next_field_state = MAP_STATE_UNDEFINED;
 		int i = 0;
+		
+		int closest_direction = get_closest_direction( behavior_sensorReadings.positionSensor.t , MAP_FIELD_NUM_CONNECTIONS);
+		
 		for( i=0; i<MAP_FIELD_NUM_CONNECTIONS; i++)
 		{
-			printf("for i = %d ", i);
-			next_field_state = (*currentField).connections[i].state;
+			int next_direction = (i+closest_direction)%MAP_FIELD_NUM_CONNECTIONS;
+			//~ printf("for i = %d, next_direction = %d", i, next_direction);
+			next_field_state = (*currentField).connections[next_direction].state;
 			//~ next_field_state = (*currentField).connections[i];
-			printf("state = %d ", next_field_state);
+			//~ printf("state = %d ", next_field_state);
 			if(next_field_state == MAP_STATE_UNDEFINED){
-				printf("next_field_state is undefined \n");
+				//~ printf("next_field_state is undefined \n");
 				beh_labyrinth_explore.state = LAB_BEH_MAP_FIELD_AND_DECIDE;
-				beh_labyrinth_explore.next_direction = i;
+				beh_labyrinth_explore.next_direction = next_direction;
 				break;
 			}
 			else{
@@ -326,25 +346,32 @@ void labyrinth_explore(){
 			}
 		}
 		if(next_field_state != MAP_STATE_UNDEFINED){
-			printf("find next free destination \n");
-			//todo calculate best next destination		
-			for( i=0; i<MAP_FIELD_NUM_CONNECTIONS; i++)
-			{
-				printf("for i = %d ", i);
-				next_field_state = (*currentField).connections[i].state;
-				//~ next_field_state = (*currentField).connections[i];
-				printf("state = %d ", next_field_state);
-				if(next_field_state == MAP_STATE_FREE)
-				{
-					printf("\n\n\n###############  GOING TO FRIEND  #################\n\n\n");
-					beh_labyrinth_explore.next_field = (*currentField).connections[i].field;
-					beh_labyrinth_explore.state = LAB_BEH_STATE_MOVE_TO_NEXT_POINT;
-					break;
-				}
-			}
-			if(next_field_state != MAP_STATE_FREE){
-				signal_ERROR();	//no neghbours are free
-			}
+			
+			//calculate next path 
+			
+			reset_labyrinth_explore();
+			set_follow_path_to_unexplored_field();			
+			
+			//~ printf("find next free destination \n");
+			//~ //todo calculate best next destination		
+			//~ for( i=0; i<MAP_FIELD_NUM_CONNECTIONS; i++)
+			//~ {
+				//~ int next_direction = (i+closest_direction)%MAP_FIELD_NUM_CONNECTIONS;
+				//~ printf("for i = %d, next_direction = %d", i, next_direction);
+				//~ next_field_state = (*currentField).connections[next_direction].state;
+				//~ //next_field_state = (*currentField).connections[next_direction];
+				//~ printf("state = %d ", next_field_state);
+				//~ if(next_field_state == MAP_STATE_FREE)
+				//~ {
+					//~ printf("\n\n\n###############  GOING TO FRIEND  #################\n\n\n");
+					//~ beh_labyrinth_explore.next_field = (*currentField).connections[next_direction].field;
+					//~ beh_labyrinth_explore.state = LAB_BEH_STATE_MOVE_TO_NEXT_POINT;
+					//~ break;
+				//~ }
+			//~ }
+			//~ if(next_field_state != MAP_STATE_FREE){
+				//~ signal_ERROR();	//no neghbours are free
+			//~ }
 		}				
 		//beh_labyrinth_explore.state = LAB_BEH_STATE_MOVE_TO_NEXT_POINT;
 	}
@@ -354,26 +381,27 @@ void labyrinth_explore(){
 		double angel = beh_labyrinth_explore.next_direction*((2.0*M_PI)/(double)MAP_FIELD_NUM_CONNECTIONS);
 		//angel = angle_difference(behavior_sensorReadings.positionSensor.t, angel);
 		if(rotate_to_angle(angel)==true){
-			movement_stop();
+			movement_fullstop();
 			printf("calculate position and distance \n");
 			//get more accurate reeadings to decide more accuratly
 			behavior_sensorReadings = get_accurate_sensor_reading();
 			//calculate position and distance
 			double distance = DISTANCE_BETWEEN_POINTS;
 			PositionXY neighbour_position;
-			new_points_from_distance_and_angle(behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, &neighbour_position.x, &neighbour_position.y, behavior_sensorReadings.positionSensor.t, distance);
+			new_points_from_distance_and_angle((*currentField).position.x, (*currentField).position.y, &neighbour_position.x, &neighbour_position.y, angel, distance);
+			//new_points_from_distance_and_angle(behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, &neighbour_position.x, &neighbour_position.y, behavior_sensorReadings.positionSensor.t, distance);
 			//calculate state
 			int neighbour_state = (
-											behavior_sensorReadings.obstacleSensor.front >= DISTANCE_NEAR_FRONT
-										&& behavior_sensorReadings.obstacleSensor.left >= DISTANCE_CLOSE_SIDES
-										&& behavior_sensorReadings.obstacleSensor.right >= DISTANCE_CLOSE_SIDES
+											behavior_sensorReadings.obstacleSensor.front >= DISTANCE_NEXT_POINT_FRONT
+										&& behavior_sensorReadings.obstacleSensor.left >= DISTANCE_NEXT_POINT_SIDES
+										&& behavior_sensorReadings.obstacleSensor.right >= DISTANCE_NEXT_POINT_SIDES
 									) ? MAP_STATE_FREE : MAP_STATE_OCCUPIED;
 			MapField *neighbour_field;
 			
-			printf("BEHAVIOR: currentField=%d ,  startingField=%d\n", currentField, startingField);
+			//~ printf("BEHAVIOR: currentField=%p ,  startingField=%p\n", currentField, startingField);
 			
 			neighbour_field = add_field(currentField, beh_labyrinth_explore.next_direction, neighbour_state, neighbour_state, neighbour_position);
-			if(neighbour_state == MAP_STATE_FREE)
+			if(neighbour_state == MAP_STATE_FREE && (*neighbour_field).num_visits == 0)
 			{
 				printf("go to neighbour \n");
 				//go to neighbour
@@ -383,7 +411,7 @@ void labyrinth_explore(){
 			else
 			{
 				printf("field not free \n");
-				printf("f=%5.3f ,l=%5.3f ,r=%5.3f \n", behavior_sensorReadings.obstacleSensor.front, behavior_sensorReadings.obstacleSensor.left ,behavior_sensorReadings.obstacleSensor.right);
+				//~ printf("f=%5.3f ,l=%5.3f ,r=%5.3f \n", behavior_sensorReadings.obstacleSensor.front, behavior_sensorReadings.obstacleSensor.left ,behavior_sensorReadings.obstacleSensor.right);
 				beh_labyrinth_explore.state = LAB_BEH_FIND_NEXT_UNDEF_FIELD;
 				//~ printf("field not free \n");
 				//~ //rotate to next neighbour
@@ -410,35 +438,65 @@ void reset_labyrinth_explore(){
 	//~ beh_labyrinth_explore.destination.y = 200.0;
 }
 
-
-
 typedef struct{
 	int current_field_index;
 	MapField *path[MAX_MAP_FIELDS];
 	int end_field_index;
-} Behavior_fillow_path_vals;
-Behavior_fillow_path_vals Behavior_fillow_path;
+} Behavior_follow_path_vals;
+static Behavior_follow_path_vals beh_follow_path;
+
+void set_follow_path_to_unexplored_field(){
+	printf("set_follow_path_to_unexplored_field\n");
+	reset_follow_path();
+	get_path_to_unexplored_field(beh_follow_path.path, &beh_follow_path.end_field_index);
+}
+
+void set_follow_path_to_return_home(){
+	printf("set_follow_path_to_return_home\n");
+	reset_follow_path();
+	get_path_to_starting_field(beh_follow_path.path, &beh_follow_path.end_field_index);
+}
 
 void reset_follow_path(){
-	Behavior_fillow_path.current_field_index = 0;
-	*Behavior_fillow_path.path = NULL;
+	printf("reset_follow_path\n");
+	beh_follow_path.current_field_index = -1;
+	*beh_follow_path.path = NULL;
 	//test
-	get_path_to_nearest_unexplored_field(Behavior_fillow_path.path, &Behavior_fillow_path.end_field_index);
+	//~ get_path_to_unexplored_field(beh_follow_path.path, &beh_follow_path.end_field_index);
+	//~ printf("end_index = %d\n",beh_follow_path.end_field_index);
+	//~ int i = 0;
+	//~ for(i=0; i<beh_follow_path.end_field_index; i++)
+	//~ {
+		//~ printf(" index(%d) = %p \n", i, beh_follow_path.path[i]);
+	//~ }
 }
 
 bool test_follow_path(){
+	//~ return false;
 	bool result = false;
 	//if path is set and the robot has not yet reached the destination return true
 	//else return false	
-	if(*Behavior_fillow_path.path != NULL && Behavior_fillow_path.current_field_index < Behavior_fillow_path.end_field_index){
+	if(*beh_follow_path.path != NULL && beh_follow_path.current_field_index < beh_follow_path.end_field_index){
 		result = true;
+		printf("test_follow_path - true\n");
 	}else{
 		result = false;
+		printf("test_follow_path - false\n");
 	}
+	
 	return result;
 }
 void follow_path(){
-	
+	if(move_to_point((*beh_follow_path.path[beh_follow_path.current_field_index+1]).position.x ,  (*beh_follow_path.path[beh_follow_path.current_field_index+1]).position.y )){
+		movement_stop();
+		beh_follow_path.current_field_index++;
+		set_CurrentField(beh_follow_path.path[beh_follow_path.current_field_index]);
+		if(beh_follow_path.current_field_index == beh_follow_path.end_field_index){
+			reset_labyrinth_explore();
+			reset_follow_path();
+			signal_long_LED();		
+		}
+	}	
 }
 
 
@@ -446,9 +504,12 @@ bool test_labyrinth_return_home(){
 	return true;
 }
 void labyrinth_return_home(){
+	set_follow_path_to_return_home();
 	printf("LABYRINTH_RETURN_HOME \n");
 }
-void reset_labyrinth_return();
+void reset_labyrinth_return_home(){
+	set_follow_path_to_return_home();
+}
 
 void reset_stop_at_beacon(){
 	
@@ -492,7 +553,7 @@ bool test_stop_at_starting_point(){
 void stop_at_starting_point(){
 	printf("..............STOP_AT_STARTING_POINT.........\n");
 	/*victory dance*/
-	movement_stop();	
+	movement_fullstop();	
 }
 
 int get_priority_from_id(int id)
@@ -557,14 +618,16 @@ void reset_default_priority_list()
 void set_return_priority_list()
 {
 	behavior_struct.priority_list[0] = STOP_AT_STARTING_POINT_ID;
-	behavior_struct.priority_list[1] = AVOID_COLISION_ID;	
-	behavior_struct.priority_list[2] = LABYRINTH_RETURN_HOME_ID;
+	behavior_struct.priority_list[1] = AVOID_COLISION_ID;
+	behavior_struct.priority_list[2] = FOLLOW_PATH_ID;
+	behavior_struct.priority_list[3] = LABYRINTH_RETURN_HOME_ID;
 	
 	reset_stop_at_starting_point();	
 	reset_avoid_colision();
 	//~ reset_follow_starting_point();
 	//~ reset_follow_wall();
 	reset_wounder();
+	reset_follow_path();
 	reset_labyrinth_explore();
 }
 
@@ -577,13 +640,15 @@ void behaviors_init(){
 	//~ position.y = 0.0;
 	map_init(position);
 	
-	movement_stop();
+	movement_fullstop();
 	behaviors_state = STATE_SEARCHING_FOR_BEACON_AREA;
 	behavior_struct.default_priority_list[0] = STOP_AT_BEACON_ID;
 	behavior_struct.default_priority_list[1] = AVOID_COLISION_ID;
-	behavior_struct.default_priority_list[2] = LABYRINTH_EXPLORE_ID;
+	behavior_struct.default_priority_list[2] = FOLLOW_PATH_ID;
+	behavior_struct.default_priority_list[3] = LABYRINTH_EXPLORE_ID;
 	
 	reset_default_priority_list();
+	reset_follow_path();
 	reset_labyrinth_explore();
 	reset_avoid_colision();
 	//~ reset_follow_wall();
@@ -592,11 +657,11 @@ void behaviors_init(){
 	reset_wounder();	
 }
 void behaviors_finish(){
-	movement_stop();
+	movement_fullstop();
 };
 
 void signal_long_LED(){
-	movement_stop();
+	movement_fullstop();
 	leds(15);
 	wait(2);
 	leds(0);
@@ -606,14 +671,14 @@ void signal_long_LED(){
 	leds(0);
 }
 void signal_short_LED(){
-	movement_stop();
+	movement_fullstop();
 	leds(15);
 	wait(2);
 	leds(0);
 }
 void signal_ERROR(){
 	printf("WARNING: An ERROR occured!! \n");	
-	movement_stop();
+	movement_fullstop();
 	while(1){
 		leds(9);
 		wait(1);
@@ -642,10 +707,10 @@ void reset_follow_wall();
 bool test_follow_beacon();
 void follow_beacon();
 void reset_follow_beacon();
-//~ 
 
 
-int follow_starting_point_last_point;
+static int follow_starting_point_last_point;
+static double next_point_rel_dir = 0.0;
 void reset_follow_starting_point(){
 	follow_starting_point_last_point = behavior_sensorReadings.last_position_index;
 }
@@ -727,7 +792,7 @@ typedef struct
 	bool wallAngleSet;
 	int curveCounter;
 } Behavior_follow_wall_vals;
-Behavior_follow_wall_vals beh_fol_wall;
+static Behavior_follow_wall_vals beh_fol_wall;
 void reset_follow_wall(){
 	beh_fol_wall.isActive = false;
 	beh_fol_wall.isActive = false;
