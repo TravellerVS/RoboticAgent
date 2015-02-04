@@ -5,6 +5,8 @@
 #include "rmi_compass.h"
 #include <detpic32.h>
 
+#define SENSORS_DEBUG 		false
+
 /** \brief returns the value of the beacon snsor and also controlls te servo that is responsible for directing (the behaviour) the beacon sensor
  * */
 void readBeaconSensor();
@@ -14,7 +16,12 @@ void readObstacleSensors();
 void readOtherSensors();
 void readPositionSensors();
 
-/** \brief calculates the avrage value from the buffer of sensor readings and sotres them in the sensor_filteredSensorReadings
+/** \brief calculates the avrage value from the buffer of sensor readings and stores them in the sensor_filteredSensorReadings
+ * */
+void calculate_filteredSensorReadings_weighted_avrage();
+
+/** \brief calculates the filtered value from the buffer of sensor readings and stores them in the sensor_filteredSensorReadings
+ * \detailed calculateds the median value for the obstacle sensors and a weighted_avrage value for the rest of the sensors, the weighted avrage considers recent readings as more important
  * */
 void calculate_filteredSensorReadings();
 
@@ -31,21 +38,21 @@ void save_breadcrumbs();
  * */
 double normalize_obstacle_sensor(int sensor_reading);
 
-
+void order_double_array(double array[], int size);
 
 void refresh_buffer();
-
 
 SensorReadings sensor_sensorReadings;
 
 SensorBufferReadings sensor_filteredSensorReadings;
 
-#define READINGS_BUFFER_SIZE	10
+#define READINGS_BUFFER_SIZE	5
 
 typedef struct{
 	bool analog_sensors_updated;
 	int num_readings;
 	double compas_offset;
+	SensorBufferReadings sensor_readings_offset;
 	SensorBufferReadings sensor_sensorReadings_buffer[READINGS_BUFFER_SIZE];
 } SensorInternalValues;
 SensorInternalValues internal_values;
@@ -53,16 +60,28 @@ SensorInternalValues internal_values;
 void sensors_init(){
 	enableObstSens();
 	enableGroundSens();
-	initCompass();
+	//~ initCompass();
 	sensor_sensorReadings.last_position_index = -1;	
 	internal_values.analog_sensors_updated = NO;
 	internal_values.num_readings = 0;
 	internal_values.compas_offset = 0.0;
+	
+	internal_values.sensor_readings_offset.beaconSensor.isVisible = false;
+	internal_values.sensor_readings_offset.beaconSensor.apsolute_direction = 0;
+	internal_values.sensor_readings_offset.beaconSensor.relative_direction = 0;
+	internal_values.sensor_readings_offset.groundSensor = 0;
+	internal_values.sensor_readings_offset.obstacleSensor.front = 0;
+	internal_values.sensor_readings_offset.obstacleSensor.left = 0;
+	internal_values.sensor_readings_offset.obstacleSensor.right = 0;
+	internal_values.sensor_readings_offset.positionSensor.x = 0;
+	internal_values.sensor_readings_offset.positionSensor.y = 0;
+	internal_values.sensor_readings_offset.positionSensor.t = 0;
+	
 	refresh_buffer();
 	refresh_buffer();
 	refresh_buffer();
 	refresh_buffer();
-	internal_values.compas_offset = sensor_filteredSensorReadings.positionSensor.compass_direction;
+	internal_values.compas_offset = -sensor_filteredSensorReadings.positionSensor.compass_direction;
 	refresh_buffer();
 }
 
@@ -87,7 +106,7 @@ void sensors_finish(){
 void refresh_sensorReadings(int state){
 	internal_values.analog_sensors_updated = NO;
 	readPositionSensors();
-	readCompassSensor();
+	//~ readCompassSensor();
 	readObstacleSensors();
 	readOtherSensors();
 	
@@ -95,16 +114,16 @@ void refresh_sensorReadings(int state){
 		readBeaconSensor();
 		//save_breadcrumbs();
 		readGroundSensor();
-		readCompassSensor();
+		//~ readCompassSensor();
 	}else if(state == STATE_SEARCHING_FOR_BEACON_AREA){
 		//save_breadcrumbs();
 		readGroundSensor();
-		readCompassSensor();
+		//~ readCompassSensor();
 	}
 	else if(state == STATE_DEFAULT)
 	{
 		readGroundSensor();
-		readCompassSensor();
+		//~ readCompassSensor();
 	}
 	
 	calculate_extra_values();
@@ -120,11 +139,12 @@ void refresh_sensorReadings(int state){
 	
 	calculate_filteredSensorReadings();
 	//~ printf("\n");
-	//~ printf("  Position: x=%5.3f, y=%5.3f, t=%5.3f \n", sensor_sensorReadings.positionSensor.x        , sensor_sensorReadings.positionSensor.y        , sensor_sensorReadings.positionSensor.t        );
-	printf("F_Position: x=%5.3f, y=%5.3f, t=%5.3f \n", sensor_filteredSensorReadings.positionSensor.x, sensor_filteredSensorReadings.positionSensor.y, sensor_filteredSensorReadings.positionSensor.t);
-	//~ printf("  ObstSensors : Obst_front=%5.3f, Obst_left=%5.3f, Obst_right=%5.3f \n", sensor_sensorReadings.obstacleSensor.front, sensor_sensorReadings.obstacleSensor.left, sensor_sensorReadings.obstacleSensor.right);
-	printf("F_ObstSensors: front=%5.3f, left=%5.3f, right=%5.3f, \n", sensor_filteredSensorReadings.obstacleSensor.front, sensor_filteredSensorReadings.obstacleSensor.left, sensor_filteredSensorReadings.obstacleSensor.right);
-	
+	if(SENSORS_DEBUG){
+		printf("  Position: x=%5.3f, y=%5.3f, t=%5.3f \n", sensor_sensorReadings.positionSensor.x        , sensor_sensorReadings.positionSensor.y        , sensor_sensorReadings.positionSensor.t        );
+		printf("F_Position: x=%5.3f, y=%5.3f, t=%5.3f \n", sensor_filteredSensorReadings.positionSensor.x, sensor_filteredSensorReadings.positionSensor.y, sensor_filteredSensorReadings.positionSensor.t);
+		printf("  ObstSensors : Obst_front=%5.3f, Obst_left=%5.3f, Obst_right=%5.3f \n", sensor_sensorReadings.obstacleSensor.front, sensor_sensorReadings.obstacleSensor.left, sensor_sensorReadings.obstacleSensor.right);
+		printf("F_ObstSensors: front=%5.3f, left=%5.3f, right=%5.3f, \n", sensor_filteredSensorReadings.obstacleSensor.front, sensor_filteredSensorReadings.obstacleSensor.left, sensor_filteredSensorReadings.obstacleSensor.right);
+	}
 	//~ printf("Obst_left=%03f, Obst_front=%03f, Obst_right=%03f, Bat_voltage=%03d, Ground_sens=%d, Beacon_visible=%d, Ground_sensors=", 
 	//~ sensor_sensorReadings.obstacleSensor.left, sensor_sensorReadings.obstacleSensor.front, sensor_sensorReadings.obstacleSensor.right, sensor_sensorReadings.batteryVoltage, sensor_sensorReadings.groundSensor,
 					//~ sensor_sensorReadings.beaconSensor.isVisible);
@@ -149,6 +169,12 @@ void check_analog_sensors(){
 
 void readPositionSensors(){
 	getRobotPos(&sensor_sensorReadings.positionSensor.x, &sensor_sensorReadings.positionSensor.y, &sensor_sensorReadings.positionSensor.t);  
+	sensor_sensorReadings.positionSensor.x += internal_values.sensor_readings_offset.positionSensor.x;
+	sensor_sensorReadings.positionSensor.y += internal_values.sensor_readings_offset.positionSensor.y;
+	sensor_sensorReadings.positionSensor.t += internal_values.sensor_readings_offset.positionSensor.t;
+	//~ readCompassSensor();
+	//~ sensor_sensorReadings.positionSensor.t = sensor_sensorReadings.positionSensor.compass_direction + internal_values.compas_offset;	
+	
 }
 
 void readObstacleSensors(){
@@ -169,12 +195,17 @@ void readOtherSensors(){
 }
 
 void readCompassSensor(){
+	
+	//~ int compass_reading = 0;//getCompassValue();
+	//~ sensor_sensorReadings.positionSensor.compass_direction = 0; //deg_to_rad((double)compass_reading);
+	//~ return;
 	check_analog_sensors();
 	int compass_reading = getCompassValue();
 	sensor_sensorReadings.positionSensor.compass_direction = deg_to_rad((double)compass_reading);	
 }
 
 double normalize_obstacle_sensor(int sensor_reading){
+	sensor_reading = (sensor_reading < 160) ? 160:sensor_reading;
 	double reading = (double) sensor_reading - 80;
 	double constant = 6200.0;
 	double result_value = 0.0;
@@ -297,7 +328,7 @@ void save_reading_to_buffer(){
 	internal_values.sensor_sensorReadings_buffer[READINGS_BUFFER_SIZE-1].groundSensor = sensor_sensorReadings.groundSensor;
 }
 
-void calculate_filteredSensorReadings(){
+void calculate_filteredSensorReadings_weighted_avrage(){
 	int i;
 	sensor_filteredSensorReadings.obstacleSensor.front = 0;
 	sensor_filteredSensorReadings.obstacleSensor.left = 0;
@@ -336,6 +367,116 @@ void calculate_filteredSensorReadings(){
 	sensor_filteredSensorReadings.positionSensor.t = sensor_filteredSensorReadings.positionSensor.t / (double)sum_k;
 	sensor_filteredSensorReadings.positionSensor.compass_direction = sensor_filteredSensorReadings.positionSensor.compass_direction / (double)sum_k;
 	sensor_filteredSensorReadings.groundSensor = sensor_filteredSensorReadings.groundSensor / sum_k;
+}
+
+void calculate_filteredSensorReadings(){
+	int i;
+	sensor_filteredSensorReadings.positionSensor.x = 0;
+	sensor_filteredSensorReadings.positionSensor.y = 0;
+	sensor_filteredSensorReadings.positionSensor.t = 0;
+	double positionSensor_t_X = 0;
+	double positionSensor_t_Y = 0;
+	sensor_filteredSensorReadings.positionSensor.compass_direction = 0;
+	double positionSensor_compass_direction_X = 0;
+	double positionSensor_compass_direction_Y = 0;
+	sensor_filteredSensorReadings.groundSensor = 0;
+	int sum_k = 0;
+	
+	double obstacleSensor_front[READINGS_BUFFER_SIZE];
+	double obstacleSensor_left[READINGS_BUFFER_SIZE];
+	double obstacleSensor_right[READINGS_BUFFER_SIZE];
+	for(i = 0 ;i<READINGS_BUFFER_SIZE;i++){
+		
+		int k = (i+1)/2;
+		k = (k==0) ? 1 : k;
+		sum_k += k;
+		
+		//store for median value
+		obstacleSensor_front[i] = internal_values.sensor_sensorReadings_buffer[i].obstacleSensor.front;
+		obstacleSensor_left[i] = internal_values.sensor_sensorReadings_buffer[i].obstacleSensor.left;
+		obstacleSensor_right[i] = internal_values.sensor_sensorReadings_buffer[i].obstacleSensor.right;		
+		
+		
+		//calculate sum for weighed avrage value
+		sensor_filteredSensorReadings.positionSensor.x += (double)k * internal_values.sensor_sensorReadings_buffer[i].positionSensor.x;
+		sensor_filteredSensorReadings.positionSensor.y += (double)k * internal_values.sensor_sensorReadings_buffer[i].positionSensor.y;
+		
+		double val_t = internal_values.sensor_sensorReadings_buffer[i].positionSensor.t;
+		positionSensor_t_X += (double)k * cos(val_t);
+		positionSensor_t_Y += (double)k * sin(val_t);
+		//~ normalize_angle_to_positive(&val_t);
+		//~ sensor_filteredSensorReadings.positionSensor.t += (double)k * val_t;
+		
+		double val_compass_direction = internal_values.sensor_sensorReadings_buffer[i].positionSensor.compass_direction;
+		positionSensor_compass_direction_X += (double)k * cos(val_compass_direction);
+		positionSensor_compass_direction_Y += (double)k * sin(val_compass_direction);
+		//~ normalize_angle_to_positive(&val_compass_direction);
+		//~ sensor_filteredSensorReadings.positionSensor.compass_direction += (double)k * val_compass_direction;
+		
+		sensor_filteredSensorReadings.groundSensor += k * internal_values.sensor_sensorReadings_buffer[i].groundSensor;
+	}
+	
+	//order for median value
+	order_double_array(obstacleSensor_front, READINGS_BUFFER_SIZE);	
+	order_double_array(obstacleSensor_left, READINGS_BUFFER_SIZE);	
+	order_double_array(obstacleSensor_right, READINGS_BUFFER_SIZE);	
+	//get median value
+	if(READINGS_BUFFER_SIZE%2==0)
+	{
+		//avrage of 2 middle values
+		int index = READINGS_BUFFER_SIZE/2;
+		sensor_filteredSensorReadings.obstacleSensor.front = (obstacleSensor_front[index-1]+obstacleSensor_front[index])/2;
+		sensor_filteredSensorReadings.obstacleSensor.left = (obstacleSensor_left[index-1]+obstacleSensor_left[index])/2;
+		sensor_filteredSensorReadings.obstacleSensor.right = (obstacleSensor_right[index-1]+obstacleSensor_right[index])/2;
+	}
+	else
+	{
+		//just take the middle value
+		int index = (READINGS_BUFFER_SIZE-1)/2;
+		sensor_filteredSensorReadings.obstacleSensor.front = obstacleSensor_front[index];
+		sensor_filteredSensorReadings.obstacleSensor.left = obstacleSensor_left[index];
+		sensor_filteredSensorReadings.obstacleSensor.right = obstacleSensor_right[index];
+		
+	}
+	//calculate the end avrage value
+	sensor_filteredSensorReadings.positionSensor.x = sensor_filteredSensorReadings.positionSensor.x / (double)sum_k;
+	sensor_filteredSensorReadings.positionSensor.y = sensor_filteredSensorReadings.positionSensor.y / (double)sum_k;
+	sensor_filteredSensorReadings.positionSensor.t = atan2(positionSensor_t_Y, positionSensor_t_X);
+	normalize_angle(&sensor_filteredSensorReadings.positionSensor.t);
+	sensor_filteredSensorReadings.positionSensor.compass_direction = atan2(positionSensor_compass_direction_Y, positionSensor_compass_direction_X);
+	normalize_angle(&sensor_filteredSensorReadings.positionSensor.compass_direction);
+	sensor_filteredSensorReadings.groundSensor = sensor_filteredSensorReadings.groundSensor / sum_k;
+}
+
+void order_double_array(double array[], int size){	
+	int i,j;
+	for (i = 0; i < size; ++i)
+    {
+        for (j = i + 1; j < size; ++j)
+        {
+            if (array[i] > array[j])//orderes in ascending order
+            {
+				//switch the values
+                array[i] = array[i]-array[j];
+                array[j] = array[i]+array[j];
+                array[i] = array[j]-array[i];
+            }
+        }
+    }
+    //~ printf("\nSorted Array: ");
+    //~ for (i = 0; i < size; ++i)
+    //~ {
+        //~ printf(" %5.3f",array[i] );
+    //~ }
+    //~ printf("\n");
+}
+
+void add_position_correction(double x, double y, double t)
+{
+	internal_values.sensor_readings_offset.positionSensor.x += x;
+	internal_values.sensor_readings_offset.positionSensor.y += y;
+	internal_values.sensor_readings_offset.positionSensor.t += t;
+	printf("GLOBAL CORRECTION: x=%5.3f, y=%5.3f, t=%5.3f \n", internal_values.sensor_readings_offset.positionSensor.x, internal_values.sensor_readings_offset.positionSensor.y,internal_values.sensor_readings_offset.positionSensor.t);
 }
 
 SensorReadings get_sensorReadings(){

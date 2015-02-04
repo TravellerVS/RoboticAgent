@@ -97,4 +97,7 @@ void refresh_sensorReadings(int state);
 
 SensorReadings get_accurate_sensor_reading();
 
+
+void add_position_correction(double x, double y, double t);
+
 #endif
