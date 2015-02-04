@@ -2,7 +2,6 @@
 #include "dijkstra.h"
 #include "map.h"
 
-
 #define MAP_DEBUG 		false
 
 /**\brief MapField constructor
@@ -14,19 +13,41 @@ MapField new_MapField();
  * */
 MapFieldConnection new_MapFieldConnection();
 
-
+/**\brief sets up the wights array for later use in the dijkstra shortest path function
+ * */
 void get_dijkstra_weights(int weight[DIJKSTRA_MAXNODES][DIJKSTRA_MAXNODES]);
+
+/**\brief calculates the shortest path to all field from the myStartingField 
+ * \param precede - will be populated with preceding indexes for each field for getting the shotest path. example: precede[chosen_index] = index_of_of_field_that_precedes_the_chosen_index
+ * \param distance - will contain the minimal distances between the myStartingField and all other fields. example: distance[destination_field] = distance fro the starting field to the destination filed 
+ * */
 void calculate_shortest_paths(MapField *myStartingField, int precede[DIJKSTRA_MAXNODES], int distance[DIJKSTRA_MAXNODES]);
+
+/**\brief copys values from the path_end_index and path[MAX_MAP_FIELDS] into return_path[MAX_MAP_FIELDS] and end_index values
+ * 		it is used in multiple functions to return the path
+ * */
 void copy_path_values(MapField *return_path[MAX_MAP_FIELDS], int *end_index);
+
+/**\brief calculates the shortest path form the precede array, starting_index and destination_index and sets the path[MAX_MAP_FIELDS] and path_end_index values
+ * \param starting_index - index from map_fields[MAX_MAP_FIELDS] of the starting point field
+ * \param destination_index - index from map_fields[MAX_MAP_FIELDS] of the destination point field
+ * */
 void set_shortest_paths(int starting_index, int destination_index, int precede[DIJKSTRA_MAXNODES], int distance[DIJKSTRA_MAXNODES]);
 
-
+/**\brief array contains all the fields currently contained in the map.
+ * */
 static MapField map_fields[MAX_MAP_FIELDS];
-
-static MapField *path[MAX_MAP_FIELDS];
-static int path_end_index = 0;
-
+/**\brief used as a counter of the current number of fileds existing in the map and for managing the map_fields array
+ * */
 static int map_num_fields = 0;
+
+/**\brief contains pointers to fields and represents a pathh that can be returned
+ * */
+static MapField *path[MAX_MAP_FIELDS];
+
+/**\brief contains the end value of the path
+ * */
+static int path_end_index = 0;
 
 MapField *add_field(MapField *field, int direction, int connection_state, int new_field_state, PositionXY position){
 	MapField *newField;
@@ -239,35 +260,17 @@ void get_path_to_unexplored_field(MapField *return_path[MAX_MAP_FIELDS], int *en
 	}
 }
 
-
-//~ 
-//~ int direction_to_narest_unxplored_field(){
-	//~ MapFeldPath startPoint;
-	//~ //startPoint//??
-	//~ return direction_to_narest_unxplored_field(currentField);
-//~ }
-//~ int direction_to_narest_unxplored_field_recursion(MapField *field)
-//~ {
-	//~ int i = 0;
-	//~ for( i=0; i<MAP_FIELD_NUM_CONNECTIONS; i++)
-	//~ {
-		//~ if((*field).connections[i].state == MAP_STATE_UNDEFINED){
-			//~ return i;
-		//~ }
-	//~ }
-	//~ for( i=0; i<MAP_FIELD_NUM_CONNECTIONS; i++)
-	//~ {
-		//~ if((*field).connections[i].state == MAP_STATE_FREE){
-			//~ int next_direction = direction_to_narest_unxplored_field_recursion((*field).connections[i].field);
-			//~ if(next_direction >= 0)
-			//~ {
-				//~ return next_direction;
-			//~ }
-		//~ }
-	//~ }
-	//~ return -1;
-//~ }
-
+bool points_are_in_line(PositionXY p1, PositionXY p2, PositionXY p3){
+	bool result = false;
+	double angle1_2 = atan2((p2.y-p1.y), (p2.x-p1.x));
+	double angle2_3 = atan2((p3.y-p2.y), (p3.x-p2.x));
+	//~ printf("\n points_are_in_line %5.3f %5.3f",angle1_2, angle1_2);	
+	if( angle1_2 == angle2_3 ){		
+		result = true;
+	}else{
+	}
+	return result;
+}
 void map_init(PositionXY position){
 	printf("init_map \n");
 	map_num_fields = 0;

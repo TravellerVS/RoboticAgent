@@ -22,14 +22,14 @@
 
 /** \brief speeds
  * */
-#define SPEED_BEFORE_STOP 				7
+#define SPEED_BEFORE_STOP 				10
 #define SPEED_SLOW 						20
-#define SPEED_MEDIUM 					40
-#define SPEED_FAST 						60
-#define SPEED_ROTATE_BEFORE_STOP		7
+#define SPEED_MEDIUM 					50
+#define SPEED_FAST 						80
+#define SPEED_ROTATE_BEFORE_STOP		10
 #define SPEED_ROTATE_SLOW				20
-#define SPEED_ROTATE 					40
-#define SPEED_ROTATE_FAST 				60
+#define SPEED_ROTATE 					30
+#define SPEED_ROTATE_FAST 				50
 #define SPEED_FOLLOW_WALL 				30
 
 //~ #define SPEED_SLOW 						10
@@ -45,27 +45,32 @@
 #define DISTANCE_FOLLOW_WALL_IDEAL_MAX		24.0
 #define DISTANCE_FOLLOW_WALL_SIDES 			23.0	
 #define DISTANCE_FOLLOW_WALL_FRONT 			16.0	
-#define DISTANCE_COLISION_FRONT				15.0
-#define DISTANCE_COLISION_SIDES				15.0
+#define DISTANCE_COLISION_FRONT				8.0
+#define DISTANCE_COLISION_SIDES				8.0
 #define DISTANCE_NEAR_FRONT					30.0
-#define DISTANCE_NEAR_SIDES					40.0//35.0
-#define DISTANCE_FAR_SIDES					60.0
-#define DISTANCE_FAR_FRONT					60.0
-#define DISTANCE_CLOSE_SIDES				23.0
+#define DISTANCE_NEAR_SIDES					30.0//35.0//40.0
+#define DISTANCE_FAR_SIDES					50.0
+#define DISTANCE_FAR_FRONT					50.0
+#define DISTANCE_CLOSE_SIDES				25.0
 
-/** \brief aproximate distance buffer vaulues for the return journey of the robot 
- * */
-#define STARTING_POINT_BUFFER				2.0
-#define CLOSE_TO_STARTING_POINT				20.0
-#define OTHER_POINT_BUFFER					10.0
-#define DISTANCE_XY_CLOSE					10.0
 
-#define DISTANCE_BETWEEN_POINTS 			200.0//112.0
-
-#define DISTANCE_NEXT_POINT_FRONT			DISTANCE_NEAR_FRONT//30.0
-#define DISTANCE_NEXT_POINT_SIDES			DISTANCE_CLOSE_SIDES//40.0
+#define DISTANCE_NEXT_POINT_FRONT			45.0//DISTANCE_FAR_FRONT//DISTANCE_NEAR_FRONT//30.0
+#define DISTANCE_NEXT_POINT_SIDES			19.0//DISTANCE_CLOSE_SIDES//DISTANCE_CLOSE_SIDES//40.0
 //~ #define DISTANCE_NEXT_SIDE_POINT_SIDES		DISTANCE_FAR_SIDES//40.0
 
+#define DISTANCE_FROM_CENTER_TO_WALL_FRONT  20.0
+
+
+
+/** \brief aproximate distance buffer vaulues for the return journey of the robot -> in mm
+ * */
+#define STARTING_POINT_BUFFER				2.0
+#define CLOSE_TO_STARTING_POINT				5.0
+#define OTHER_POINT_BUFFER					20.0
+#define DISTANCE_XY_CLOSE					20.0
+
+#define DISTANCE_BETWEEN_POINTS 			450.0//112.0
+#define DISTANCE_FROM_CENTER_TO_WALL_TELERANCE  50.0
 /** \brief pseudo enumeration of the states
  * */
 #define STATE_DEFAULT						0
