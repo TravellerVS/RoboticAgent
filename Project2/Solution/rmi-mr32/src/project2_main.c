@@ -22,14 +22,11 @@
 //~ #include "movements.h"
 #include "behaviors.h"
 
-
-
-
 int main(void){
 	initPIC32();
 	
-	//~ configBTUart(3, 115200); // Configure Bluetooth UART
-    //~ bt_on();     // enable bluetooth channel; printf
+	configBTUart(3, 115200); // Configure Bluetooth UART
+    bt_on();     // enable bluetooth channel; printf
                 // is now redirected to the bluetooth UART
 	
 	closedLoopControl( true );
@@ -72,13 +69,13 @@ int main(void){
 			//~ wait(1);	
 			//~ printf("################### behavior CALL ###################\n");
 			if(execute_behavior(behavior_control)==1){				
-				printf("FINISH\n");
+				printf("!!!!!!!!!!!!!FINISHED!!!!!!!!!!!!!!!!!\n");
 				behaviors_finish();
 				sensors_finish();
 				/*victory dance  :) */
-				rotateRel_naive(-M_PI/4);
-				rotateRel_naive(M_PI/2);
-				rotateRel_naive(-M_PI/4);
+				//~ rotateRel_naive(-M_PI/4);
+				//~ rotateRel_naive(M_PI/2);
+				//~ rotateRel_naive(-M_PI/4);
 				return 0;
 			}
 			//~ printf("################### behavior FINISHED ###################\n");

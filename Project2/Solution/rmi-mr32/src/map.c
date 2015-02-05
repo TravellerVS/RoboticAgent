@@ -49,6 +49,112 @@ static MapField *path[MAX_MAP_FIELDS];
  * */
 static int path_end_index = 0;
 
+#define PRINT_MAP_MAX 		40
+#define PRINT_MAP_OFFSET 	20
+
+void print_out_map(){
+	//field dimentions are 5x5 fields big so the area has to be 2 times wide and long that because of the unknown initial position of the robot in the field and 2 times that and plus1 because of the connections so 25X25 just for good measure (min is 22)
+	printf("\n##########################\n RESULTING MAP \n##########################\n ");
+	char print_array[PRINT_MAP_MAX][PRINT_MAP_MAX];
+	int offset = PRINT_MAP_OFFSET;//to center everything;
+	
+	int y,x;
+	for(y = 0; y<PRINT_MAP_MAX; y++){
+		for(x = 0; x<PRINT_MAP_MAX; x++){
+			print_array[x][y] = ' ';
+		}
+	}
+	int index = 0;
+	for(index = 0; index<map_num_fields; index++){
+		int indexX = offset;
+		int indexY = offset;
+		
+		indexX += 2*((int)(map_fields[index].position.x)/DISTANCE_BETWEEN_POINTS);
+		indexY -= 2*((int)(map_fields[index].position.y)/DISTANCE_BETWEEN_POINTS);
+		
+		int field_state = map_fields[index].state;
+		char c = 'A';
+		if(field_state == MAP_STATE_FREE){
+			c = 'O';
+		}
+		else if(field_state == MAP_STATE_OCCUPIED){
+			c = 'X';
+		}
+		else{
+			c = '?';
+		}
+		if(map_fields[index].field_index == (*startingField).field_index){
+			c = 'S';
+		}
+		if(map_fields[index].field_index == (*goalField).field_index){
+			c = 'F';
+		}
+		
+		print_array[indexX][indexY] = c;
+		int direction = 0;
+		for(direction = 0; direction<MAP_FIELD_NUM_CONNECTIONS; direction++)
+		{
+			int connection_offsetX = 0;
+			int connection_offsetY = 0;
+			char connection_char = 'o';
+			if(direction == 0){
+				connection_offsetX = 1;
+				connection_offsetY = 0;
+				connection_char = '-';
+			}
+			else if(direction == 1){
+				connection_offsetX = 0;
+				connection_offsetY = 1;
+				connection_char = '|';
+			}
+			else if(direction == 2){
+				connection_offsetX = -1;
+				connection_offsetY = 0;
+				connection_char = '-';
+			}
+			else if(direction == 3){
+				connection_offsetX = 0;
+				connection_offsetY = -1;
+				connection_char = '|';
+			}
+			c = ' ';
+			if(field_state == MAP_STATE_FREE){
+				c = connection_char;
+			}
+			else if(field_state == MAP_STATE_OCCUPIED){
+				c = 'x';
+			}
+			else{
+				c = '?';
+			}
+			print_array[indexX+connection_offsetX][indexY+connection_offsetY] = c;
+		}
+	}
+	printf("\n##########################\n RESULTING MAP ##########################\n");
+	for(y = 0; y<PRINT_MAP_MAX; y++){
+		for(x= 0; x<PRINT_MAP_MAX; x++){
+			printf("%c",print_array[x][y]);
+		}
+		printf("\n");
+	}
+}
+
+MapField *get_closest_field(PositionXY position, double *resulting_distance){
+	MapField *field;
+	field = NULL;
+	double smallest_distance = DISTANCE_BETWEEN_POINTS*100;
+	int index = 0;
+	for(index = 0; index<map_num_fields; index++){
+		double current_distance = distance_between_points(position.x, position.y, map_fields[index].position.x, map_fields[index].position.y);
+		if(current_distance<=smallest_distance){
+			smallest_distance = current_distance;
+			field = &map_fields[index];
+		}
+	}
+	*resulting_distance = smallest_distance;	
+	return field;
+}
+
 MapField *add_field(MapField *field, int direction, int connection_state, int new_field_state, PositionXY position){
 	MapField *newField;
 	bool is_old_field = false;
@@ -131,9 +237,13 @@ MapFieldConnection new_MapFieldConnection(){
 void set_StartingField(MapField *field){
 	startingField = field;
 }
+void set_GoalField(MapField *field){
+	goalField = field;
+}
 void set_CurrentField(MapField *field){
 	currentField = field;
 	(*currentField).num_visits++;
+	printf("Current field is: %d\n",(*currentField).field_index);
 }
 
 
@@ -290,7 +400,7 @@ void map_init(PositionXY position){
 	set_StartingField(&map_fields[new_field_index]);
 	set_CurrentField(&map_fields[new_field_index]);
 	
-	//~ //testing the path
+	//testing the path
 	//~ PositionXY path_position = (*startingField).position;
 	//~ int path_index = 0;
 	//~ path[path_index] = startingField;
@@ -318,6 +428,7 @@ void map_init(PositionXY position){
 	//~ path[path_index] = add_field(path[path_index-1], 1, MAP_STATE_FREE, MAP_STATE_FREE, path_position);
 	//~ path_end_index++;
 	//~ set_CurrentField(path[path_index]);
+	//~ set_GoalField(currentField);
 	//~ 
 	//~ path_index++;
 	//~ path_position.x -= DISTANCE_BETWEEN_POINTS;
@@ -347,6 +458,8 @@ void map_init(PositionXY position){
 	//~ 
 	//~ get_path_to_starting_field(path, &path_end_index);
 	//~ get_path_to_unexplored_field(path, &path_end_index);
+	//~ print_out_map();
+	
 	
 	if(MAP_DEBUG){
 		printf("currentField=%p,  startingField=%p\n", currentField, startingField);
