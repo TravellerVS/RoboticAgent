@@ -86,6 +86,9 @@ static MapField *startingField;
  * */
 static MapField *currentField;
 
+/**\brief contains pointer to the goal point field - (BEACON AREA)
+ * */
+static MapField *goalField;
 
 /**\brief initializes the map and sets the starting and current fields
  * */
@@ -112,5 +115,15 @@ void get_path_to_starting_field(MapField *return_path[MAX_MAP_FIELDS], int *end_
 /**\brief determins if the 3 points are all in a single line 
 * */
 bool points_are_in_line(PositionXY p1, PositionXY p2, PositionXY p3);
+
+/**\brief returns pointer to closest field in map and the distance in the resulting_distance value
+* */
+MapField *get_closest_field(PositionXY position, double *resulting_distance);
+
+
+/**\brief prints out the mapas the robot currently sees it. It prints it to the standard utput using the printf function
+* */
+void print_out_map();
+
 
 #endif

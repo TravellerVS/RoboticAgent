@@ -42,6 +42,8 @@ void order_double_array(double array[], int size);
 
 void refresh_buffer();
 
+void check_for_offset();
+
 SensorReadings sensor_sensorReadings;
 
 SensorBufferReadings sensor_filteredSensorReadings;
@@ -51,7 +53,8 @@ SensorBufferReadings sensor_filteredSensorReadings;
 typedef struct{
 	bool analog_sensors_updated;
 	int num_readings;
-	double compas_offset;
+	double initial_compas_offset;
+	bool initilisation_done;
 	SensorBufferReadings sensor_readings_offset;
 	SensorBufferReadings sensor_sensorReadings_buffer[READINGS_BUFFER_SIZE];
 } SensorInternalValues;
@@ -60,12 +63,12 @@ SensorInternalValues internal_values;
 void sensors_init(){
 	enableObstSens();
 	enableGroundSens();
-	//~ initCompass();
+	initCompass();
 	sensor_sensorReadings.last_position_index = -1;	
 	internal_values.analog_sensors_updated = NO;
 	internal_values.num_readings = 0;
-	internal_values.compas_offset = 0.0;
-	
+	internal_values.initial_compas_offset = 0.0;
+	internal_values.initilisation_done = false;
 	internal_values.sensor_readings_offset.beaconSensor.isVisible = false;
 	internal_values.sensor_readings_offset.beaconSensor.apsolute_direction = 0;
 	internal_values.sensor_readings_offset.beaconSensor.relative_direction = 0;
@@ -81,8 +84,9 @@ void sensors_init(){
 	refresh_buffer();
 	refresh_buffer();
 	refresh_buffer();
-	internal_values.compas_offset = -sensor_filteredSensorReadings.positionSensor.compass_direction;
+	internal_values.initial_compas_offset = -sensor_filteredSensorReadings.positionSensor.compass_direction;
 	refresh_buffer();
+	internal_values.initilisation_done = true;
 }
 
 SensorReadings get_accurate_sensor_reading(){
@@ -106,7 +110,7 @@ void sensors_finish(){
 void refresh_sensorReadings(int state){
 	internal_values.analog_sensors_updated = NO;
 	readPositionSensors();
-	//~ readCompassSensor();
+	readCompassSensor();
 	readObstacleSensors();
 	readOtherSensors();
 	
@@ -133,15 +137,24 @@ void refresh_sensorReadings(int state){
 	if(internal_values.num_readings < 1000){
 		internal_values.num_readings++;
 	}
+	else
+	{
+		internal_values.num_readings = 100;
+	}
 	
 	//print the current readings
 	//double compass = readCompassSensor();
 	
 	calculate_filteredSensorReadings();
+	
+	if(internal_values.initilisation_done && internal_values.num_readings%(READINGS_BUFFER_SIZE*4) == 0){
+		check_for_offset();	
+	}
+		
 	//~ printf("\n");
 	if(SENSORS_DEBUG){
-		printf("  Position: x=%5.3f, y=%5.3f, t=%5.3f \n", sensor_sensorReadings.positionSensor.x        , sensor_sensorReadings.positionSensor.y        , sensor_sensorReadings.positionSensor.t        );
-		printf("F_Position: x=%5.3f, y=%5.3f, t=%5.3f \n", sensor_filteredSensorReadings.positionSensor.x, sensor_filteredSensorReadings.positionSensor.y, sensor_filteredSensorReadings.positionSensor.t);
+		printf("  Position: x=%5.3f, y=%5.3f, t=%5.3f , compass: %5.3f\n", sensor_sensorReadings.positionSensor.x        , sensor_sensorReadings.positionSensor.y        , sensor_sensorReadings.positionSensor.t ,  sensor_sensorReadings.positionSensor.compass_direction );
+		printf("F_Position: x=%5.3f, y=%5.3f, t=%5.3f  , compass: %5.3f\n", sensor_filteredSensorReadings.positionSensor.x, sensor_filteredSensorReadings.positionSensor.y, sensor_filteredSensorReadings.positionSensor.t, sensor_sensorReadings.positionSensor.compass_direction);
 		printf("  ObstSensors : Obst_front=%5.3f, Obst_left=%5.3f, Obst_right=%5.3f \n", sensor_sensorReadings.obstacleSensor.front, sensor_sensorReadings.obstacleSensor.left, sensor_sensorReadings.obstacleSensor.right);
 		printf("F_ObstSensors: front=%5.3f, left=%5.3f, right=%5.3f, \n", sensor_filteredSensorReadings.obstacleSensor.front, sensor_filteredSensorReadings.obstacleSensor.left, sensor_filteredSensorReadings.obstacleSensor.right);
 	}
@@ -172,9 +185,7 @@ void readPositionSensors(){
 	sensor_sensorReadings.positionSensor.x += internal_values.sensor_readings_offset.positionSensor.x;
 	sensor_sensorReadings.positionSensor.y += internal_values.sensor_readings_offset.positionSensor.y;
 	sensor_sensorReadings.positionSensor.t += internal_values.sensor_readings_offset.positionSensor.t;
-	//~ readCompassSensor();
-	//~ sensor_sensorReadings.positionSensor.t = sensor_sensorReadings.positionSensor.compass_direction + internal_values.compas_offset;	
-	
+	readCompassSensor();	
 }
 
 void readObstacleSensors(){
@@ -470,6 +481,21 @@ void order_double_array(double array[], int size){
     //~ }
     //~ printf("\n");
 }
+
+void check_for_offset(){
+	return;
+	//this part cannot be implemeted this way because internaly the robot calculates the positions using the wheels and this would create a gap between the agent and readings gotten from the robot (from the rmi-mr32.h script)
+	//~ double compas_direcion_in_system = sensor_filteredSensorReadings.positionSensor.t + internal_values.initial_compas_offset;
+	//~ normalize_angle(&compas_direcion_in_system);
+	//~ double angle_diff = angle_difference(sensor_filteredSensorReadings.positionSensor.t , compas_direcion_in_system);
+	//~ double angle_tollerance = (2*M_PI)/72;
+	//~ if(fabs(angle_diff) > angle_tollerance )
+	//~ {		
+		//~ double angle_correction = (angle_diff>0) ? angle_tollerance : -angle_tollerance ;
+		//~ add_position_correction(0.0, 0.0, angle_correction);
+	//~ }
+}
+
 
 void add_position_correction(double x, double y, double t)
 {
