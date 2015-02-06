@@ -73,7 +73,7 @@ void print_out_map(){
 		indexY -= 2*((int)(map_fields[index].position.y)/DISTANCE_BETWEEN_POINTS);
 		
 		int field_state = map_fields[index].state;
-		char c = 'A';
+		char c = '!';
 		if(field_state == MAP_STATE_FREE){
 			c = 'O';
 		}
@@ -94,35 +94,36 @@ void print_out_map(){
 		int direction = 0;
 		for(direction = 0; direction<MAP_FIELD_NUM_CONNECTIONS; direction++)
 		{
+			int conection_state = map_fields[index].connections[direction].state;
 			int connection_offsetX = 0;
 			int connection_offsetY = 0;
-			char connection_char = 'o';
+			char free_connection_char = '!';
 			if(direction == 0){
 				connection_offsetX = 1;
 				connection_offsetY = 0;
-				connection_char = '-';
+				free_connection_char = '-';
 			}
 			else if(direction == 1){
 				connection_offsetX = 0;
-				connection_offsetY = 1;
-				connection_char = '|';
+				connection_offsetY = -1;
+				free_connection_char = '|';
 			}
 			else if(direction == 2){
 				connection_offsetX = -1;
 				connection_offsetY = 0;
-				connection_char = '-';
+				free_connection_char = '-';
 			}
 			else if(direction == 3){
 				connection_offsetX = 0;
-				connection_offsetY = -1;
-				connection_char = '|';
+				connection_offsetY = 1;
+				free_connection_char = '|';
 			}
 			c = ' ';
-			if(field_state == MAP_STATE_FREE){
-				c = connection_char;
+			if(conection_state == MAP_STATE_FREE){
+				c = free_connection_char;
 			}
-			else if(field_state == MAP_STATE_OCCUPIED){
-				c = 'x';
+			else if(conection_state == MAP_STATE_OCCUPIED){
+				c = '+';
 			}
 			else{
 				c = '?';

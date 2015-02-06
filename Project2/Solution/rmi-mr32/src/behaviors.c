@@ -367,11 +367,10 @@ void labyrinth_explore(){
 				//~ }
 				if(behavior_sensorReadings.obstacleSensor.left < DISTANCE_NEXT_FRONT_POINT_SIDES_OCCUPIED)
 				{
-					add_field(beh_labyrinth_explore.next_field, left_direction, MAP_STATE_OCCUPIED, MAP_STATE_OCCUPIED, neighbour_position);
+					add_field(beh_labyrinth_explore.next_field, left_direction, MAP_STATE_OCCUPIED, MAP_STATE_UNDEFINED, neighbour_position);
 					printf("LEFT NIGHBOUR OCCUPIED\n");
 				}
 			}
-				
 			int right_direction = (closest_direction-1)%MAP_FIELD_NUM_CONNECTIONS;
 			if((*beh_labyrinth_explore.next_field).connections[right_direction].state == MAP_STATE_UNDEFINED)
 			{
@@ -386,7 +385,7 @@ void labyrinth_explore(){
 				//~ }	
 				if(behavior_sensorReadings.obstacleSensor.right < DISTANCE_NEXT_FRONT_POINT_SIDES_OCCUPIED)
 				{
-					add_field(beh_labyrinth_explore.next_field, right_direction, MAP_STATE_OCCUPIED, MAP_STATE_OCCUPIED, neighbour_position);
+					add_field(beh_labyrinth_explore.next_field, right_direction, MAP_STATE_OCCUPIED, MAP_STATE_UNDEFINED, neighbour_position);
 					printf("RIGHT NIGHBOUR OCCUPIED\n");
 				}
 			}
@@ -407,9 +406,7 @@ void labyrinth_explore(){
 		//find next undefined state
 		int next_field_state = MAP_STATE_UNDEFINED;
 		int i = 0;
-		
 		int closest_direction = get_closest_direction( behavior_sensorReadings.positionSensor.t , MAP_FIELD_NUM_CONNECTIONS);
-		
 		for( i=0; i<MAP_FIELD_NUM_CONNECTIONS; i++)
 		{
 			int next_direction = (i+closest_direction)%MAP_FIELD_NUM_CONNECTIONS;
@@ -444,7 +441,7 @@ void labyrinth_explore(){
 		//rotate to next undefined neighbour
 		double angle = beh_labyrinth_explore.next_direction*((2.0*M_PI)/(double)MAP_FIELD_NUM_CONNECTIONS);
 		//angle = angle_difference(behavior_sensorReadings.positionSensor.t, angle);
-		if( rotate_to_angle(angle, (2*M_PI)/144) == true ){// 5 degrees
+		if( rotate_to_angle(angle, (2*M_PI)/144) == true ){// 5 degrees in both ways
 			
 			
 			movement_fullstop();
@@ -460,7 +457,7 @@ void labyrinth_explore(){
 			new_points_from_distance_and_angle((*currentField).position.x, (*currentField).position.y, &neighbour_position.x, &neighbour_position.y, angle, distance);
 			//new_points_from_distance_and_angle(behavior_sensorReadings.positionSensor.x, behavior_sensorReadings.positionSensor.y, &neighbour_position.x, &neighbour_position.y, behavior_sensorReadings.positionSensor.t, distance);
 			//calculate state
-			int neighbour_state = (
+			int connection_state = (
 											behavior_sensorReadings.obstacleSensor.front >= DISTANCE_NEXT_POINT_FRONT
 										//~ && behavior_sensorReadings.obstacleSensor.left >= DISTANCE_NEXT_POINT_SIDES
 										//~ && behavior_sensorReadings.obstacleSensor.right >= DISTANCE_NEXT_POINT_SIDES
@@ -468,20 +465,19 @@ void labyrinth_explore(){
 			MapField *neighbour_field;
 			
 			//~ printf("BEHAVIOR: currentField=%p ,  startingField=%p\n", currentField, startingField);
-			
-			neighbour_field = add_field(currentField, beh_labyrinth_explore.next_direction, neighbour_state, neighbour_state, neighbour_position);
-			if(neighbour_state == MAP_STATE_FREE && (*neighbour_field).num_visits == 0)
+			int neighbour_state = (connection_state==MAP_STATE_FREE) ? MAP_STATE_FREE: MAP_STATE_UNDEFINED;
+			neighbour_field = add_field(currentField, beh_labyrinth_explore.next_direction, connection_state, neighbour_state, neighbour_position);
+			if(connection_state == MAP_STATE_FREE && (*neighbour_field).num_visits == 0)
 			{
 				//~ printf("go to neighbour \n");
-				//go to neighbour
-				
-				
-				if(	behavior_sensorReadings.obstacleSensor.left <= DISTANCE_CLOSE_SIDES || behavior_sensorReadings.obstacleSensor.right <= DISTANCE_CLOSE_SIDES)
+				//go to neighbour			
+				if(	behavior_sensorReadings.obstacleSensor.left <= 30.0 || behavior_sensorReadings.obstacleSensor.right <= 30.0)
 				{
 					//wall is to close so add that as an occupied field int the next call and make the correction 
-					int step = (behavior_sensorReadings.obstacleSensor.left > behavior_sensorReadings.obstacleSensor.right) ? 1:-1;
-					beh_labyrinth_explore.next_direction = (beh_labyrinth_explore.next_direction + step)%MAP_FIELD_NUM_CONNECTIONS;
-					printf("next step is to correct step= %d",step); 
+					int step = (behavior_sensorReadings.obstacleSensor.left < behavior_sensorReadings.obstacleSensor.right) ? 1:-1;
+					int closest_direction = get_closest_direction( behavior_sensorReadings.positionSensor.t , MAP_FIELD_NUM_CONNECTIONS);
+					beh_labyrinth_explore.next_direction = (closest_direction + step)%MAP_FIELD_NUM_CONNECTIONS;
+					printf("CORRECTING from LAB EXPLORE, next step is= %d",step); 
 				}
 				else
 				{
@@ -497,12 +493,6 @@ void labyrinth_explore(){
 				if(check_current_position_offset()){
 					beh_labyrinth_explore.state = LAB_BEH_FIND_NEXT_UNDEF_FIELD;	
 				}				
-					
-				//~ printf("field not free \n");
-				//~ //rotate to next neighbour
-				//~ rotateRel_naive((2*M_PI)/MAP_FIELD_NUM_CONNECTIONS);
-				//~ beh_labyrinth_explore.next_direction++;
-				//~ beh_labyrinth_explore.next_direction = beh_labyrinth_explore.next_direction%MAP_FIELD_NUM_CONNECTIONS;
 			}
 		}
 		else
@@ -616,9 +606,10 @@ bool check_current_position_offset(){
 			double distance = DISTANCE_BETWEEN_POINTS;
 			PositionXY neighbour_position;
 			new_points_from_distance_and_angle((*currentField).position.x, (*currentField).position.y, &neighbour_position.x, &neighbour_position.y, angle, distance);
-			int neighbour_state = (behavior_sensorReadings.obstacleSensor.front >= DISTANCE_NEXT_POINT_FRONT) ? MAP_STATE_FREE : MAP_STATE_OCCUPIED;
+			int connection_state = (behavior_sensorReadings.obstacleSensor.front >= DISTANCE_NEXT_POINT_FRONT) ? MAP_STATE_FREE : MAP_STATE_OCCUPIED;
+			int neighbour_state = (connection_state==MAP_STATE_FREE) ? MAP_STATE_FREE : MAP_STATE_UNDEFINED;
 			MapField *neighbour_field;
-			neighbour_field = add_field(currentField, closest_direction, neighbour_state, neighbour_state, neighbour_position);
+			neighbour_field = add_field(currentField, closest_direction, connection_state, neighbour_state, neighbour_position);
 		}
 		else{
 			result = false;
