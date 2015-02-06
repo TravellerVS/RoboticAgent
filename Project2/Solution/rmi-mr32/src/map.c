@@ -123,7 +123,7 @@ void print_out_map(){
 				c = free_connection_char;
 			}
 			else if(conection_state == MAP_STATE_OCCUPIED){
-				c = '+';
+				c = 'x';
 			}
 			else{
 				c = '?';
@@ -177,7 +177,7 @@ MapField *add_field(MapField *field, int direction, int connection_state, int ne
 	}
 	newField = &map_fields[new_field_index];
 	
-	(*newField).state = new_field_state;
+	(*newField).state = ((*newField).state == MAP_STATE_UNDEFINED) ? new_field_state : (*newField).state ;
 	(*newField).position.x = position.x;
 	(*newField).position.y = position.y;
 	
